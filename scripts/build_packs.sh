@@ -15,6 +15,9 @@ if ! rustup target list --installed | grep -q "wasm32-wasip2"; then
   exit 1
 fi
 
+export PACKC_LOG=warn
+export CARGO_TERM_PROGRESS_WHEN=never
+
 rm -rf "${DIST_DIR}"
 mkdir -p "${DIST_DIR}"
 TMP_ROOT="$(mktemp -d)"
@@ -32,6 +35,7 @@ for pack in "${ROOT_DIR}"/packs/events/*.yaml; do
 
   echo "Building pack: ${pack} -> ${out}"
   "${PACKC_BIN}" build \
+    --log warn \
     --in "${work_dir}" \
     --gtpack-out "${out}" \
     --manifest "${DIST_DIR}/${name}.cbor" \
