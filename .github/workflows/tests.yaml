@@ -17,6 +17,8 @@ jobs:
           toolchain: 1.89.0
           override: true
           components: rustfmt, clippy
+      - name: Install wasm32-wasip2 target
+        run: rustup target add wasm32-wasip2
       - name: Install packc (skip if cached)
         run: |
           if ! command -v packc >/dev/null 2>&1; then
