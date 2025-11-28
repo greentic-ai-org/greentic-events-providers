@@ -22,8 +22,11 @@ jobs:
           toolchain: 1.89.0
           override: true
 
-      - name: Install packc
-        run: cargo install greentic-pack --locked
+      - name: Install packc (skip if cached)
+        run: |
+          if ! command -v packc >/dev/null 2>&1; then
+            cargo install greentic-pack --locked
+          fi
 
       - name: Build pack artifact
         run: bash scripts/build_packs.sh
