@@ -4,8 +4,9 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST_DIR="${ROOT_DIR}/dist/packs"
 
-if ! command -v packc >/dev/null 2>&1; then
-  echo "packc not found. Install with: cargo install greentic-pack --locked" >&2
+PACKC_BIN="$(command -v packc || command -v greentic-pack || true)"
+if [ -z "${PACKC_BIN}" ]; then
+  echo "packc/greentic-pack not found. Install with: cargo install greentic-pack --locked" >&2
   exit 1
 fi
 
@@ -25,7 +26,7 @@ for pack in "${ROOT_DIR}"/packs/events/*.yaml; do
   rsync -a "${ROOT_DIR}/flows" "${work_dir}/"
 
   echo "Building pack: ${pack} -> ${out}"
-  packc build \
+  "${PACKC_BIN}" build \
     --in "${work_dir}" \
     --gtpack-out "${out}" \
     --manifest "${DIST_DIR}/${name}.cbor" \
