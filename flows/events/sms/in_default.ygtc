@@ -1,9 +1,14 @@
-# SMS inbound default flow
-# Source: events-sms-source@1.0.0
+id: sms-in-default
+title: SMS inbound default
+description: Default flow that emits inbound SMS events.
+type: messaging
+start: show_info
 
-steps:
-  - kind: "source"
-    provider: "sms-in-twilio"
-  - kind: "emit"
-    topics:
-      - "sms.in.twilio.*"
+nodes:
+  show_info:
+    templating.handlebars:
+      text: |
+        SMS inbound flow placeholder.
+        Source: sms-in-twilio -> emit sms.in.twilio.* topics.
+    routing:
+      - out: true

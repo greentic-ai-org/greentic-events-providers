@@ -1,9 +1,14 @@
-# Email outbound default flow
-# Sink: events-email-sink@1.0.0
+id: email-out-default
+title: Email outbound default
+description: Default flow that consumes outbound email events.
+type: messaging
+start: show_info
 
-steps:
-  - kind: "consume"
-    topics:
-      - "email.out.*"
-  - kind: "sink"
-    provider: "email-out-msgraph"
+nodes:
+  show_info:
+    templating.handlebars:
+      text: |
+        Email outbound flow placeholder.
+        Consume email.out.* topics and deliver via email-out provider.
+    routing:
+      - out: true

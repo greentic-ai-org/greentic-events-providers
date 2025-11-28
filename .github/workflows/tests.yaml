@@ -17,6 +17,8 @@ jobs:
           toolchain: 1.89.0
           override: true
           components: rustfmt, clippy
+      - name: Install packc
+        run: cargo install greentic-pack --locked
       - name: Local check (fmt + clippy + test + packs)
         run: ci/local_check.sh
 

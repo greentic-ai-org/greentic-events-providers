@@ -1,0 +1,25 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2025-11-28T14:52:44.363411484Z",
+    "component": {
+      "name": "greentic.events.timer",
+      "version": "0.1.0",
+      "type": "application"
+    }
+  },
+  "components": [
+    {
+      "name": "timer-default",
+      "type": "file",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "4f726c799b01c4904edd997c703b6430e934ea7f5ec03d93c88891fddb111a71"
+        }
+      ]
+    }
+  ]
+}

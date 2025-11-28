@@ -1,9 +1,14 @@
-# Timer default flow
-# Source: events-timer-source@1.0.0
+id: timer-default
+title: Timer default
+description: Default flow that emits timer events.
+type: messaging
+start: show_info
 
-steps:
-  - kind: "source"
-    provider: "timer-core"
-  - kind: "emit"
-    topics:
-      - "timer.*"
+nodes:
+  show_info:
+    templating.handlebars:
+      text: |
+        Timer flow placeholder.
+        Source: timer-core -> emit timer.* topics.
+    routing:
+      - out: true

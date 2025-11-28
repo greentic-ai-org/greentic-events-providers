@@ -1,9 +1,14 @@
-# Email inbound default flow
-# Source: events-email-source@1.0.0
+id: email-in-default
+title: Email inbound default
+description: Default flow that emits inbound email events.
+type: messaging
+start: show_info
 
-steps:
-  - kind: "source"
-    provider: "email-in-msgraph"
-  - kind: "emit"
-    topics:
-      - "email.in.msgraph.*"
+nodes:
+  show_info:
+    templating.handlebars:
+      text: |
+        Email inbound flow placeholder.
+        Source: email-in-* -> emit email.in.* topics.
+    routing:
+      - out: true

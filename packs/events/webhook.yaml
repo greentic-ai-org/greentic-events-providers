@@ -1,3 +1,16 @@
+id: greentic.events.webhook
+version: 0.1.0
+kind: application
+name: greentic.events.webhook
+description: Greentic webhook event providers
+authors:
+  - Greentic Engineering <engineering@greentic.dev>
+license: MIT
+flow_files:
+  - flows/events/webhook/in_default.ygtc
+  - flows/events/webhook/in_custom_template.ygtc
+template_dirs: []
+entry_flows: []
 events:
   providers:
     - name: "webhook-gateway"

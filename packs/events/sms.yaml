@@ -1,3 +1,16 @@
+id: greentic.events.sms
+version: 0.1.0
+kind: application
+name: greentic.events.sms
+description: Greentic SMS event providers (Twilio)
+authors:
+  - Greentic Engineering <engineering@greentic.dev>
+license: MIT
+flow_files:
+  - flows/events/sms/in_default.ygtc
+  - flows/events/sms/out_default.ygtc
+template_dirs: []
+entry_flows: []
 events:
   providers:
     - name: "sms-in-twilio"

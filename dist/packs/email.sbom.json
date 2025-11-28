@@ -1,0 +1,35 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2025-11-28T14:52:19.808294559Z",
+    "component": {
+      "name": "greentic.events.email",
+      "version": "0.1.0",
+      "type": "application"
+    }
+  },
+  "components": [
+    {
+      "name": "email-in-default",
+      "type": "file",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "323a906e94ad887a228d25ce09400aca7c587c1e6083851ad559c1d240e45e4d"
+        }
+      ]
+    },
+    {
+      "name": "email-out-default",
+      "type": "file",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "4083e0365370bdcc7f92f4ce09b6ecc627710458ba84ed15a8930c054a7be89a"
+        }
+      ]
+    }
+  ]
+}

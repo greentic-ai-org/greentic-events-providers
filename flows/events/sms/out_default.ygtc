@@ -1,9 +1,14 @@
-# SMS outbound default flow
-# Sink: events-sms-sink@1.0.0
+id: sms-out-default
+title: SMS outbound default
+description: Default flow that consumes outbound SMS events.
+type: messaging
+start: show_info
 
-steps:
-  - kind: "consume"
-    topics:
-      - "sms.out.twilio"
-  - kind: "sink"
-    provider: "sms-out-twilio"
+nodes:
+  show_info:
+    templating.handlebars:
+      text: |
+        SMS outbound flow placeholder.
+        Consume sms.out.twilio topic and deliver via sms-out provider.
+    routing:
+      - out: true

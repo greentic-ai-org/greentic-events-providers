@@ -1,10 +1,14 @@
-# Webhook default flow
-# Source: events-webhook-source@1.0.0
-# Target: greentic-events bus
+id: webhook-in-default
+title: Webhook inbound default
+description: Default flow that emits webhook events.
+type: messaging
+start: show_info
 
-steps:
-  - kind: "source"
-    provider: "webhook-gateway"
-  - kind: "emit"
-    topics:
-      - "webhook.*"
+nodes:
+  show_info:
+    templating.handlebars:
+      text: |
+        Webhook provider flow placeholder.
+        Source: webhook-gateway -> emit webhook.* topics.
+    routing:
+      - out: true

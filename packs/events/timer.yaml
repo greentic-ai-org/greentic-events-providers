@@ -1,3 +1,15 @@
+id: greentic.events.timer
+version: 0.1.0
+kind: application
+name: greentic.events.timer
+description: Greentic timer/cron event providers
+authors:
+  - Greentic Engineering <engineering@greentic.dev>
+license: MIT
+flow_files:
+  - flows/events/timer/default.ygtc
+template_dirs: []
+entry_flows: []
 events:
   providers:
     - name: "timer-core"

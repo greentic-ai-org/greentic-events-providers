@@ -1,3 +1,16 @@
+id: greentic.events.email
+version: 0.1.0
+kind: application
+name: greentic.events.email
+description: Greentic email event providers (MS Graph / Gmail)
+authors:
+  - Greentic Engineering <engineering@greentic.dev>
+license: MIT
+flow_files:
+  - flows/events/email/in_default.ygtc
+  - flows/events/email/out_default.ygtc
+template_dirs: []
+entry_flows: []
 events:
   providers:
     - name: "email-in-msgraph"

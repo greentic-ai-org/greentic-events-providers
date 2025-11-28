@@ -22,6 +22,9 @@ jobs:
           toolchain: 1.89.0
           override: true
 
+      - name: Install packc
+        run: cargo install greentic-pack --locked
+
       - name: Build pack artifact
         run: bash scripts/build_packs.sh
 
@@ -42,12 +45,18 @@ jobs:
           TAG: ${{ github.sha }}
         run: |
           oras push "${IMAGE}:${TAG}" \
-            dist/greentic-events-packs.tar.gz:application/gzip \
+            dist/packs/webhook.gtpack:application/octet-stream \
+            dist/packs/email.gtpack:application/octet-stream \
+            dist/packs/sms.gtpack:application/octet-stream \
+            dist/packs/timer.gtpack:application/octet-stream \
             --annotation org.opencontainers.image.title="greentic-events-packs" \
             --annotation org.opencontainers.image.description="Greentic event provider packs and flows" \
             --annotation org.opencontainers.image.revision="${TAG}"
           oras push "${IMAGE}:latest" \
-            dist/greentic-events-packs.tar.gz:application/gzip \
+            dist/packs/webhook.gtpack:application/octet-stream \
+            dist/packs/email.gtpack:application/octet-stream \
+            dist/packs/sms.gtpack:application/octet-stream \
+            dist/packs/timer.gtpack:application/octet-stream \
             --annotation org.opencontainers.image.title="greentic-events-packs" \
             --annotation org.opencontainers.image.description="Greentic event provider packs and flows" \
             --annotation org.opencontainers.image.revision="${TAG}"

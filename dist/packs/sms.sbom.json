@@ -1,0 +1,35 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2025-11-28T14:52:33.109430512Z",
+    "component": {
+      "name": "greentic.events.sms",
+      "version": "0.1.0",
+      "type": "application"
+    }
+  },
+  "components": [
+    {
+      "name": "sms-in-default",
+      "type": "file",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "f1ff0f23a69260d26807ea5de97eadd61badedec9eeedf2ae6c6704d88b8fd7a"
+        }
+      ]
+    },
+    {
+      "name": "sms-out-default",
+      "type": "file",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "2c16097819d879e020fd48ab1969da9dedcb6c9fcc871bda60137516bd2c6c95"
+        }
+      ]
+    }
+  ]
+}

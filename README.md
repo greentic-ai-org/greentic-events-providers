@@ -17,11 +17,11 @@ Reusable Greentic event providers shipped as WASM components plus packs for `gre
 - `docs/` – overview + per-provider notes.
 - `packs/events/` – YAML packs consumed by greentic-events/deployer.
 - `flows/events/` – default/custom flow stubs referenced by packs.
-- `scripts/build_packs.sh` – packages packs/flows into `dist/greentic-events-packs.tar.gz` (used by CI).
-- `.github/workflows/publish-packs.yaml` – publishes the tarball to GHCR on tags.
+- `scripts/build_packs.sh` – builds validated `*.gtpack` artifacts via `packc` (requires `cargo install greentic-pack --locked`).
+- `.github/workflows/publish-packs.yaml` – builds `*.gtpack` with `packc` and publishes to GHCR on tags.
 - `ci/local_check.sh` – run fmt + clippy + tests + pack build locally (mirrors CI).
 - `.github/workflows/tests.yaml` – CI for fmt/clippy/tests; live tests gated by vars; builds packs.
-- `.github/workflows/publish-latest-packs.yaml` – publishes latest pack tarball to GHCR on main.
+- `.github/workflows/publish-latest-packs.yaml` – publishes latest `*.gtpack` artifacts to GHCR on main.
 
 ## Versioning & constraints
 - Rust edition 2024, MSRV 1.89.
@@ -31,7 +31,7 @@ Reusable Greentic event providers shipped as WASM components plus packs for `gre
 ## Developing
 - Build with `cargo build` (workspace).
 - Run tests with `cargo test`.
-- Packs are validated via serde parsing tests; flows are placeholders but kept consistent with pack references.
+- Packs are validated/built via `packc` into `dist/packs/*.gtpack`; flows remain minimal placeholders but satisfy schema.
 
 ## Integration testing against real services
 The CI/pipeline can run live integration tests per provider when the relevant secrets are present. If a provider’s secrets are missing, tests should emit a warning and skip that provider.

@@ -1,11 +1,13 @@
-# Custom webhook flow template
-# Copy and adjust mappings / routing rules as needed.
+id: webhook-in-custom
+title: Webhook inbound custom
+description: Template flow for custom webhook mappings.
+type: messaging
+start: customize
 
-steps:
-  - kind: "source"
-    provider: "webhook-gateway"
-  - kind: "transform"
-    notes: "add your mapping here"
-  - kind: "emit"
-    topics:
-      - "webhook.*"
+nodes:
+  customize:
+    templating.handlebars:
+      text: |
+        Customize this flow to map incoming webhook payloads as needed.
+    routing:
+      - out: true
