@@ -25,7 +25,7 @@ jobs:
       - name: Install packc (skip if cached)
         run: |
           if ! command -v packc >/dev/null 2>&1; then
-            cargo install greentic-pack --locked --bin packc
+            cargo install packc --locked
           fi
 
       - name: Build pack artifact
