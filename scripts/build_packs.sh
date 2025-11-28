@@ -10,6 +10,8 @@ if [ -z "${PACKC_BIN}" ]; then
   exit 1
 fi
 
+# Ensure wasm32-wasip2 target is available for pack builds.
+rustup target add wasm32-wasip2 >/dev/null 2>&1 || true
 if ! rustup target list --installed | grep -q "wasm32-wasip2"; then
   echo "Rust target wasm32-wasip2 not installed. Run: rustup target add wasm32-wasip2" >&2
   exit 1
