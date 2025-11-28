@@ -13,6 +13,8 @@ permissions:
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
+    env:
+      RUSTUP_TOOLCHAIN: 1.89.0
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,7 +26,12 @@ jobs:
           override: true
 
       - name: Install wasm32-wasip2 target
-        run: rustup target add wasm32-wasip2
+        run: rustup target add wasm32-wasip2 --toolchain "${RUSTUP_TOOLCHAIN}"
+
+      - name: Show toolchain/targets
+        run: |
+          rustup show active-toolchain
+          rustup target list --toolchain "${RUSTUP_TOOLCHAIN}" --installed
 
       - name: Install packc (skip if cached)
         run: |
@@ -33,7 +40,7 @@ jobs:
           fi
 
       - name: Build pack artifact
-        run: bash scripts/build_packs.sh
+        run: PACKC_DEBUG=1 bash scripts/build_packs.sh
 
       - name: Install ORAS
         uses: oras-project/setup-oras@v1

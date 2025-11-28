@@ -10,15 +10,32 @@ if [ -z "${PACKC_BIN}" ]; then
   exit 1
 fi
 
-# Ensure wasm32-wasip2 target is available for pack builds.
-rustup target add wasm32-wasip2 >/dev/null 2>&1 || true
-if ! rustup target list --installed | grep -q "wasm32-wasip2"; then
-  echo "Rust target wasm32-wasip2 not installed. Run: rustup target add wasm32-wasip2" >&2
+# Ensure wasm32-wasip2 target is available for the active toolchain, even though
+# packc builds happen in a temp dir outside this repo (and thus outside the
+# rust-toolchain override).
+ACTIVE_TOOLCHAIN="${RUSTUP_TOOLCHAIN:-$(rustup show active-toolchain 2>/dev/null | cut -d' ' -f1)}"
+if [ -z "${ACTIVE_TOOLCHAIN}" ]; then
+  ACTIVE_TOOLCHAIN="$(rustup default | awk '{print $1}')"
+fi
+
+rustup target add --toolchain "${ACTIVE_TOOLCHAIN}" wasm32-wasip2 >/dev/null 2>&1 || true
+if ! rustup target list --toolchain "${ACTIVE_TOOLCHAIN}" --installed | grep -q "wasm32-wasip2"; then
+  echo "Rust target wasm32-wasip2 not installed for toolchain ${ACTIVE_TOOLCHAIN}. Run: rustup target add --toolchain ${ACTIVE_TOOLCHAIN} wasm32-wasip2" >&2
   exit 1
 fi
 
+# Force packc/cargo invocations (in /tmp) to use the same toolchain.
+export RUSTUP_TOOLCHAIN="${ACTIVE_TOOLCHAIN}"
+
 export PACKC_LOG=warn
 export CARGO_TERM_PROGRESS_WHEN=never
+
+if [ "${PACKC_DEBUG:-0}" != 0 ]; then
+  echo "Using toolchain: ${ACTIVE_TOOLCHAIN}"
+  rustc +"${ACTIVE_TOOLCHAIN}" --version
+  echo "Installed targets for ${ACTIVE_TOOLCHAIN}:"
+  rustup target list --toolchain "${ACTIVE_TOOLCHAIN}" --installed
+fi
 
 rm -rf "${DIST_DIR}"
 mkdir -p "${DIST_DIR}"

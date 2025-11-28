@@ -1,2 +1,6 @@
 /target
 /dist
+.packc/
+*.gtpack
+*.cbor
+*.sbom.json
