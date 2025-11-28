@@ -4,9 +4,9 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST_DIR="${ROOT_DIR}/dist/packs"
 
-PACKC_BIN="$(command -v packc || command -v greentic-pack || true)"
+PACKC_BIN="$(command -v packc || true)"
 if [ -z "${PACKC_BIN}" ]; then
-  echo "packc/greentic-pack not found. Install with: cargo install greentic-pack --locked" >&2
+  echo "packc not found. Install with: cargo install greentic-pack --locked --bin packc" >&2
   exit 1
 fi
 
