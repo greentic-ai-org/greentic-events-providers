@@ -1,5 +1,6 @@
 id: greentic.events.timer
 version: 0.1.0
+packVersion: 1
 kind: application
 name: greentic.events.timer
 description: Greentic timer/cron event providers

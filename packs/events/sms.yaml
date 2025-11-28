@@ -1,5 +1,6 @@
 id: greentic.events.sms
 version: 0.1.0
+packVersion: 1
 kind: application
 name: greentic.events.sms
 description: Greentic SMS event providers (Twilio)

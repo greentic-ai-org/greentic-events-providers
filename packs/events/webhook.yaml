@@ -1,5 +1,6 @@
 id: greentic.events.webhook
 version: 0.1.0
+packVersion: 1
 kind: application
 name: greentic.events.webhook
 description: Greentic webhook event providers
