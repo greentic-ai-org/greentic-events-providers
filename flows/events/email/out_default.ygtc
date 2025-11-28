@@ -1,0 +1,9 @@
+# Email outbound default flow
+# Sink: events-email-sink@1.0.0
+
+steps:
+  - kind: "consume"
+    topics:
+      - "email.out.*"
+  - kind: "sink"
+    provider: "email-out-msgraph"

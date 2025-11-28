@@ -1,0 +1,9 @@
+# SMS outbound default flow
+# Sink: events-sms-sink@1.0.0
+
+steps:
+  - kind: "consume"
+    topics:
+      - "sms.out.twilio"
+  - kind: "sink"
+    provider: "sms-out-twilio"

@@ -1,0 +1,13 @@
+events:
+  providers:
+    - name: "webhook-gateway"
+      kind: "source"
+      component: "events-webhook-source@1.0.0"
+      default_flow: "flows/events/webhook/in_default.ygtc"
+      custom_flow: "flows/events/webhook/in_custom_template.ygtc"
+      capabilities:
+        transport: "webhook"
+        reliability: "at_least_once"
+        ordering: "none"
+        topics:
+          - "webhook.*"

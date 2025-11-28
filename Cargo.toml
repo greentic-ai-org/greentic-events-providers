@@ -1,0 +1,29 @@
+[workspace]
+members = [
+    "crates/provider-core",
+    "crates/provider-webhook",
+    "crates/provider-email",
+    "crates/provider-sms",
+    "crates/provider-timer",
+]
+resolver = "2"
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.89"
+version = "0.1.0"
+
+[workspace.dependencies]
+anyhow = "1"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+greentic-interfaces-guest = "0.4"
+greentic-oauth-sdk = { version = "0.4" }
+greentic-secrets = { version = "0.4" }
+greentic-types = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml_bw = "2"
+thiserror = "2"
+uuid = { version = "1", features = ["v4"] }
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+base64 = "0.22"

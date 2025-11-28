@@ -1,0 +1,9 @@
+# Email inbound default flow
+# Source: events-email-source@1.0.0
+
+steps:
+  - kind: "source"
+    provider: "email-in-msgraph"
+  - kind: "emit"
+    topics:
+      - "email.in.msgraph.*"

@@ -1,0 +1,34 @@
+events:
+  providers:
+    - name: "email-in-msgraph"
+      kind: "source"
+      component: "events-email-source@1.0.0"
+      capabilities:
+        transport: "msgraph"
+        reliability: "at_least_once"
+        topics:
+          - "email.in.msgraph.*"
+    - name: "email-out-msgraph"
+      kind: "sink"
+      component: "events-email-sink@1.0.0"
+      capabilities:
+        transport: "msgraph"
+        reliability: "at_least_once"
+        topics:
+          - "email.out.msgraph"
+    - name: "email-in-gmail"
+      kind: "source"
+      component: "events-email-source@1.0.0"
+      capabilities:
+        transport: "gmail"
+        reliability: "at_least_once"
+        topics:
+          - "email.in.gmail.*"
+    - name: "email-out-gmail"
+      kind: "sink"
+      component: "events-email-sink@1.0.0"
+      capabilities:
+        transport: "gmail"
+        reliability: "at_least_once"
+        topics:
+          - "email.out.gmail"

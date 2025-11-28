@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: 1.89.0
+          override: true
+          components: rustfmt, clippy
+      - name: Local check (fmt + clippy + test + packs)
+        run: ci/local_check.sh
+
+  live-tests:
+    needs: unit
+    runs-on: ubuntu-latest
+    if: ${{ vars.RUN_LIVE_TESTS == 'true' }}
+    env:
+      RUN_LIVE_TESTS: true
+      RUN_LIVE_HTTP: ${{ vars.RUN_LIVE_HTTP }}
+      MSGRAPH_CLIENT_ID: ${{ secrets.MSGRAPH_CLIENT_ID }}
+      MSGRAPH_CLIENT_SECRET: ${{ secrets.MSGRAPH_CLIENT_SECRET }}
+      MSGRAPH_TENANT_ID: ${{ secrets.MSGRAPH_TENANT_ID }}
+      MSGRAPH_TEST_USER: ${{ secrets.MSGRAPH_TEST_USER }}
+      GMAIL_CLIENT_ID: ${{ secrets.GMAIL_CLIENT_ID }}
+      GMAIL_CLIENT_SECRET: ${{ secrets.GMAIL_CLIENT_SECRET }}
+      GMAIL_REFRESH_TOKEN: ${{ secrets.GMAIL_REFRESH_TOKEN }}
+      GMAIL_TEST_USER: ${{ secrets.GMAIL_TEST_USER }}
+      TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+      TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+      TWILIO_FROM_NUMBER: ${{ secrets.TWILIO_FROM_NUMBER }}
+      TWILIO_TO_NUMBER: ${{ secrets.TWILIO_TO_NUMBER }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: 1.89.0
+          override: true
+      - name: Run live tests (skips internally if secrets missing)
+        run: cargo test --workspace --tests

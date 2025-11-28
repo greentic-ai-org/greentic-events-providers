@@ -1,0 +1,69 @@
+# greentic-events-providers
+
+Reusable Greentic event providers shipped as WASM components plus packs for `greentic-events` and `greentic-deployer`.
+
+## What is here
+- Provider families: webhook (HTTP in/out), email (MS Graph / Gmail), sms (Twilio), timer (cron/interval).
+- WASM components implement `greentic:events@1.0.0` worlds via `greentic-interfaces-guest`.
+- Packs under `packs/events` declare providers for discovery and deployment.
+- Example flows under `flows/events` reference the packs.
+
+## Structure
+- `crates/provider-core` – shared configs, helpers, errors.
+- `crates/provider-webhook` – webhook source/sink mappings.
+- `crates/provider-email` – email source/sink mappings for Graph/Gmail.
+- `crates/provider-sms` – Twilio SMS source/sink.
+- `crates/provider-timer` – cron/interval source.
+- `docs/` – overview + per-provider notes.
+- `packs/events/` – YAML packs consumed by greentic-events/deployer.
+- `flows/events/` – default/custom flow stubs referenced by packs.
+- `scripts/build_packs.sh` – packages packs/flows into `dist/greentic-events-packs.tar.gz` (used by CI).
+- `.github/workflows/publish-packs.yaml` – publishes the tarball to GHCR on tags.
+- `ci/local_check.sh` – run fmt + clippy + tests + pack build locally (mirrors CI).
+- `.github/workflows/tests.yaml` – CI for fmt/clippy/tests; live tests gated by vars; builds packs.
+- `.github/workflows/publish-latest-packs.yaml` – publishes latest pack tarball to GHCR on main.
+
+## Versioning & constraints
+- Rust edition 2024, MSRV 1.89.
+- Depends on greentic crates at `0.4`.
+- Components avoid hosting HTTP/timers; hosts feed requests/ticks into the WASM modules.
+
+## Developing
+- Build with `cargo build` (workspace).
+- Run tests with `cargo test`.
+- Packs are validated via serde parsing tests; flows are placeholders but kept consistent with pack references.
+
+## Integration testing against real services
+The CI/pipeline can run live integration tests per provider when the relevant secrets are present. If a provider’s secrets are missing, tests should emit a warning and skip that provider.
+
+Enable live tests by setting `RUN_LIVE_TESTS=true` and providing the env vars below.
+Optionally set `RUN_LIVE_HTTP=true` to let the live tests make real HTTP calls (Graph token, Gmail token, Twilio API, webhook echo).
+
+### Required secrets
+- **Webhook**: none (local echo server used).
+- **Email (Microsoft Graph)**:
+  - `MSGRAPH_CLIENT_ID`
+  - `MSGRAPH_CLIENT_SECRET`
+  - `MSGRAPH_TENANT_ID`
+  - `MSGRAPH_TEST_USER` (UPN/email to send/receive)
+- **Email (Gmail/Workspace)**:
+  - `GMAIL_CLIENT_ID`
+  - `GMAIL_CLIENT_SECRET`
+  - `GMAIL_REFRESH_TOKEN` (for test user)
+  - `GMAIL_TEST_USER` (email to send/receive)
+- **SMS (Twilio)**:
+  - `TWILIO_ACCOUNT_SID`
+  - `TWILIO_AUTH_TOKEN`
+  - `TWILIO_FROM_NUMBER`
+  - `TWILIO_TO_NUMBER` (destination for test send)
+- **Timer**: none (pure logic).
+
+### Behavior when secrets are missing
+Integration test harnesses should:
+- Detect missing env vars for each provider group.
+- Print a clear warning indicating which provider tests were skipped and which secrets are required.
+- Exit with success for skipped providers so CI does not fail when secrets are absent.
+
+### CI
+- `.github/workflows/tests.yaml` runs unit tests on every push/PR.
+- Live tests run when repository variable `RUN_LIVE_TESTS` is set to `true`; they rely on the secrets above and can make real HTTP calls if `RUN_LIVE_HTTP=true` is also set.

@@ -1,0 +1,9 @@
+# SMS inbound default flow
+# Source: events-sms-source@1.0.0
+
+steps:
+  - kind: "source"
+    provider: "sms-in-twilio"
+  - kind: "emit"
+    topics:
+      - "sms.in.twilio.*"

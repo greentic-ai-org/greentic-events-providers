@@ -1,0 +1,11 @@
+events:
+  providers:
+    - name: "timer-core"
+      kind: "source"
+      component: "events-timer-source@1.0.0"
+      capabilities:
+        transport: "timer"
+        reliability: "at_least_once"
+        ordering: "none"
+        topics:
+          - "timer.*"

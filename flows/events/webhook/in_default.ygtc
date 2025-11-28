@@ -1,0 +1,10 @@
+# Webhook default flow
+# Source: events-webhook-source@1.0.0
+# Target: greentic-events bus
+
+steps:
+  - kind: "source"
+    provider: "webhook-gateway"
+  - kind: "emit"
+    topics:
+      - "webhook.*"

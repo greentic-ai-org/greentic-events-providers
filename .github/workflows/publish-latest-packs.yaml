@@ -1,0 +1,53 @@
+name: Publish Latest Packs
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: 1.89.0
+          override: true
+
+      - name: Build pack artifact
+        run: bash scripts/build_packs.sh
+
+      - name: Install ORAS
+        uses: oras-project/setup-oras@v1
+        with:
+          version: latest
+
+      - name: Login to GHCR
+        env:
+          CR_PAT: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "${CR_PAT}" | oras login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Push pack artifact to GHCR
+        env:
+          IMAGE: ghcr.io/${{ github.repository }}/events-packs
+          TAG: ${{ github.sha }}
+        run: |
+          oras push "${IMAGE}:${TAG}" \
+            dist/greentic-events-packs.tar.gz:application/gzip \
+            --annotation org.opencontainers.image.title="greentic-events-packs" \
+            --annotation org.opencontainers.image.description="Greentic event provider packs and flows" \
+            --annotation org.opencontainers.image.revision="${TAG}"
+          oras push "${IMAGE}:latest" \
+            dist/greentic-events-packs.tar.gz:application/gzip \
+            --annotation org.opencontainers.image.title="greentic-events-packs" \
+            --annotation org.opencontainers.image.description="Greentic event provider packs and flows" \
+            --annotation org.opencontainers.image.revision="${TAG}"

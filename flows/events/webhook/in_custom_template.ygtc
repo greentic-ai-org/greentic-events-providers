@@ -1,0 +1,11 @@
+# Custom webhook flow template
+# Copy and adjust mappings / routing rules as needed.
+
+steps:
+  - kind: "source"
+    provider: "webhook-gateway"
+  - kind: "transform"
+    notes: "add your mapping here"
+  - kind: "emit"
+    topics:
+      - "webhook.*"

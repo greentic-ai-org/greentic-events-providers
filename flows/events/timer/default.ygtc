@@ -1,0 +1,9 @@
+# Timer default flow
+# Source: events-timer-source@1.0.0
+
+steps:
+  - kind: "source"
+    provider: "timer-core"
+  - kind: "emit"
+    topics:
+      - "timer.*"

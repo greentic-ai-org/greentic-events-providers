@@ -1,0 +1,18 @@
+events:
+  providers:
+    - name: "sms-in-twilio"
+      kind: "source"
+      component: "events-sms-source@1.0.0"
+      capabilities:
+        transport: "twilio"
+        reliability: "at_least_once"
+        topics:
+          - "sms.in.twilio.*"
+    - name: "sms-out-twilio"
+      kind: "sink"
+      component: "events-sms-sink@1.0.0"
+      capabilities:
+        transport: "twilio"
+        reliability: "at_least_once"
+        topics:
+          - "sms.out.twilio"
