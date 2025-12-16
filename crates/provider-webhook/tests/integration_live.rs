@@ -40,6 +40,7 @@ fn live_webhook_smoke() -> Result<(), Box<dyn Error>> {
         headers: BTreeMap::from([("content-type".into(), "application/json".into())]),
         body: serde_json::json!({"type": "smoke", "ok": true}),
         correlation_id: Some("live-webhook-1".into()),
+        signature_validated: true,
     };
     let event = source.handle_request(sample_tenant(), request)?;
     assert!(event.topic.starts_with("webhook.live"));

@@ -13,6 +13,9 @@ pub struct InboundHttpRequest {
     pub headers: BTreeMap<String, String>,
     pub body: Value,
     pub correlation_id: Option<String>,
+    /// Host-provided flag indicating whether the request signature was already validated.
+    #[serde(default)]
+    pub signature_validated: bool,
 }
 
 /// Helper to handle inbound webhook requests and map them into EventEnvelope instances.
@@ -35,13 +38,8 @@ impl WebhookSource {
             .ok_or_else(|| ProviderError::Config(format!("no route for path {}", request.path)))?;
 
         let mut metadata = self.request_metadata(&request);
-        let signature_valid = if route.secret_ref.is_some() {
-            // Host-driven signature validation will be added later; mark as false for now.
-            "false"
-        } else {
-            "true"
-        };
-        metadata.insert("signature_valid".into(), signature_valid.into());
+        let signature_valid = request.signature_validated || route.secret_ref.is_none();
+        metadata.insert("signature_valid".into(), signature_valid.to_string());
         metadata.insert("topic_prefix".into(), route.topic_prefix.clone());
 
         if let Some(key) = request
@@ -186,6 +184,7 @@ mod tests {
             headers: BTreeMap::from([("idempotency-key".into(), "idem-1".into())]),
             body: json!({"type": "payment_succeeded", "id": "evt_1"}),
             correlation_id: Some("req-123".into()),
+            signature_validated: true,
         };
 
         let event = source
@@ -199,7 +198,7 @@ mod tests {
             event.metadata.get("idempotency_key"),
             Some(&"idem-1".to_string())
         );
-        assert_eq!(event.metadata.get("signature_valid"), Some(&"false".into()));
+        assert_eq!(event.metadata.get("signature_valid"), Some(&"true".into()));
     }
 
     #[test]

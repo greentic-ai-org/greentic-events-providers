@@ -21,6 +21,9 @@ pub struct TwilioWebhookPayload {
     pub raw: Value,
     #[serde(default)]
     pub headers: BTreeMap<String, String>,
+    /// Host-provided flag indicating whether the webhook signature has been validated.
+    #[serde(default)]
+    pub signature_validated: bool,
 }
 
 pub fn handle_inbound_sms(
@@ -40,14 +43,8 @@ pub fn handle_inbound_sms(
     metadata.insert("from".into(), payload.from.clone());
     metadata.insert("to".into(), payload.to.clone());
     metadata.insert("message_sid".into(), payload.message_sid.clone());
-    metadata.insert(
-        "signature_valid".into(),
-        if cfg.signing_secret_ref.is_some() {
-            "false".into()
-        } else {
-            "true".into()
-        },
-    );
+    let signature_valid = payload.signature_validated || cfg.signing_secret_ref.is_none();
+    metadata.insert("signature_valid".into(), signature_valid.to_string());
     for (k, v) in payload.headers.iter() {
         metadata.insert(format!("header:{}", k.to_lowercase()), v.clone());
     }
@@ -157,11 +154,12 @@ mod tests {
             message_sid: "SM123".into(),
             raw: json!({"MessageSid": "SM123"}),
             headers: BTreeMap::from([("X-Twilio-Signature".into(), "sig".into())]),
+            signature_validated: true,
         };
 
         let event = handle_inbound_sms(&cfg, tenant(), payload).expect("event");
         assert_eq!(event.topic, "sms.in.twilio.support");
-        assert_eq!(event.metadata.get("signature_valid"), Some(&"false".into()));
+        assert_eq!(event.metadata.get("signature_valid"), Some(&"true".into()));
     }
 
     #[test]

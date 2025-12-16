@@ -89,6 +89,7 @@ fn live_twilio_inbound_smoke() -> Result<(), Box<dyn Error>> {
         message_sid: "live-sid-1".into(),
         raw: serde_json::json!({"Body": "Live inbound smoke"}),
         headers: BTreeMap::new(),
+        signature_validated: true,
     };
 
     let event = provider_sms::handle_inbound_sms(&cfg, sample_tenant(), payload)?;
