@@ -144,6 +144,9 @@ fn live_twilio_outbound_smoke() -> Result<(), Box<dyn Error>> {
     assert!(req.url.contains(&cfg.account_sid));
 
     if should_call_network() {
+        if !req.url.starts_with("https://") {
+            return Err(format!("Refusing to send over non-HTTPS URL: {}", req.url).into());
+        }
         let client = reqwest::blocking::Client::new();
         let res = client
             .post(&req.url)
