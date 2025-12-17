@@ -3,19 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST_DIR="${ROOT_DIR}/dist/packs"
-# Derive install/series targets from environment.
-# If PACKC_VERSION (e.g. "0.4") is set, treat it as the series and build a semver range.
-if [ -n "${PACKC_VERSION:-}" ] && [ -z "${PACKC_VERSION_REQ:-}" ]; then
-  if [[ "${PACKC_VERSION}" =~ ^[0-9]+\.[0-9]+$ ]]; then
-    PACKC_VERSION_REQ="^${PACKC_VERSION}"
-    PACKC_SERIES="${PACKC_VERSION}."
-  else
-    PACKC_VERSION_REQ="${PACKC_VERSION}"
-  fi
-fi
-PACKC_VERSION_REQ="${PACKC_VERSION_REQ:-^0.4}"
-PACKC_SERIES="${PACKC_SERIES:-0.4.}"
-PACKC_INSTALL_CMD=${PACKC_INSTALL_CMD:-cargo binstall packc --version \"${PACKC_VERSION_REQ}\" --locked}
+PACKC_INSTALL_CMD=${PACKC_INSTALL_CMD:-cargo binstall packc --locked}
 
 PACKC_BIN="$(command -v packc || true)"
 if [ -z "${PACKC_BIN}" ]; then
@@ -24,9 +12,13 @@ if [ -z "${PACKC_BIN}" ]; then
 fi
 
 INSTALLED_PACKC_VERSION="$(${PACKC_BIN} --version | awk '{print $2}')"
-if [[ "${INSTALLED_PACKC_VERSION}" != "${PACKC_SERIES}"* ]]; then
-  echo "packc ${PACKC_SERIES%?} required (found ${INSTALLED_PACKC_VERSION}). Install with: ${PACKC_INSTALL_CMD}" >&2
-  exit 1
+
+# Optional: allow callers to enforce a major.minor series (e.g., PACKC_SERIES=0.4.)
+if [ -n "${PACKC_SERIES:-}" ]; then
+  if [[ "${INSTALLED_PACKC_VERSION}" != "${PACKC_SERIES}"* ]]; then
+    echo "packc ${PACKC_SERIES%?} required (found ${INSTALLED_PACKC_VERSION}). Install with: ${PACKC_INSTALL_CMD}" >&2
+    exit 1
+  fi
 fi
 
 # Ensure wasm32-wasip2 target is available for the active toolchain, even though
