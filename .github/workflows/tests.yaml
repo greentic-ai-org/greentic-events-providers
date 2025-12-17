@@ -29,7 +29,7 @@ jobs:
       - name: Install packc (skip if cached)
         run: |
           if ! command -v packc >/dev/null 2>&1 || [[ "$(packc --version)" != packc\ ${PACKC_VERSION}* ]]; then
-            cargo install packc --version "${PACKC_VERSION}" --locked --force
+            cargo binstall packc --force
           fi
       - name: Local check (fmt + clippy + test + packs)
         run: PACKC_DEBUG=1 ci/local_check.sh
