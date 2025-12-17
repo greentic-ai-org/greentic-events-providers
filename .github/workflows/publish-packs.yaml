@@ -37,7 +37,7 @@ jobs:
       - name: Install packc (skip if cached)
         run: |
           if ! command -v packc >/dev/null 2>&1 || [[ "$(packc --version)" != packc\ ${PACKC_VERSION}* ]]; then
-            cargo binstall packc --force
+            cargo install packc --force
           fi
 
       - name: Build pack artifact

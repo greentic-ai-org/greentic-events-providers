@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST_DIR="${ROOT_DIR}/dist/packs"
-PACKC_INSTALL_CMD=${PACKC_INSTALL_CMD:-cargo binstall packc --locked}
+PACKC_INSTALL_CMD=${PACKC_INSTALL_CMD:-cargo install packc --locked}
 
 PACKC_BIN="$(command -v packc || true)"
 if [ -z "${PACKC_BIN}" ]; then
