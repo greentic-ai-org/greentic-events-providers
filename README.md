@@ -17,7 +17,7 @@ Reusable Greentic event providers shipped as WASM components plus packs for `gre
 - `docs/` – overview + per-provider notes.
 - `packs/events/` – YAML packs consumed by greentic-events/deployer.
 - `flows/events/` – default/custom flow stubs referenced by packs.
-- `scripts/build_packs.sh` – builds validated `*.gtpack` artifacts via `packc` (use `cargo install packc --version 0.4 --locked` to stay on the latest 0.4.x).
+- `scripts/build_packs.sh` – builds validated `*.gtpack` artifacts via `packc` (use `cargo install packc --version '^0.4' --locked` to stay on the latest 0.4.x).
 - `.github/workflows/publish-packs.yaml` – builds `*.gtpack` with `packc` and publishes to GHCR on tags.
 - `ci/local_check.sh` – run fmt + clippy + tests + pack build locally (mirrors CI).
 - `.github/workflows/tests.yaml` – CI for fmt/clippy/tests; live tests gated by vars; builds packs.

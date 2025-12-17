@@ -3,17 +3,18 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST_DIR="${ROOT_DIR}/dist/packs"
-PACKC_VERSION="${PACKC_VERSION:-0.4}"
+PACKC_VERSION_REQ="${PACKC_VERSION_REQ:-^0.4}"
+PACKC_SERIES="${PACKC_SERIES:-0.4.}"
 
 PACKC_BIN="$(command -v packc || true)"
 if [ -z "${PACKC_BIN}" ]; then
-  echo "packc not found. Install with: cargo install packc --version ${PACKC_VERSION} --locked" >&2
+  echo "packc not found. Install with: cargo install packc --version \"${PACKC_VERSION_REQ}\" --locked" >&2
   exit 1
 fi
 
 INSTALLED_PACKC_VERSION="$(${PACKC_BIN} --version | awk '{print $2}')"
-if [[ "${INSTALLED_PACKC_VERSION}" != "${PACKC_VERSION}" && "${INSTALLED_PACKC_VERSION}" != ${PACKC_VERSION}.* ]]; then
-  echo "packc ${PACKC_VERSION}.x required (found ${INSTALLED_PACKC_VERSION}). Install with: cargo install packc --version ${PACKC_VERSION} --locked --force" >&2
+if [[ "${INSTALLED_PACKC_VERSION}" != "${PACKC_SERIES}"* ]]; then
+  echo "packc ${PACKC_SERIES%?} required (found ${INSTALLED_PACKC_VERSION}). Install with: cargo install packc --version \"${PACKC_VERSION_REQ}\" --locked --force" >&2
   exit 1
 fi
 
