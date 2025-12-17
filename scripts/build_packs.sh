@@ -15,16 +15,17 @@ if [ -n "${PACKC_VERSION:-}" ] && [ -z "${PACKC_VERSION_REQ:-}" ]; then
 fi
 PACKC_VERSION_REQ="${PACKC_VERSION_REQ:-^0.4}"
 PACKC_SERIES="${PACKC_SERIES:-0.4.}"
+PACKC_INSTALL_CMD=${PACKC_INSTALL_CMD:-cargo binstall packc --version \"${PACKC_VERSION_REQ}\" --locked}
 
 PACKC_BIN="$(command -v packc || true)"
 if [ -z "${PACKC_BIN}" ]; then
-  echo "packc not found. Install with: cargo install packc --version \"${PACKC_VERSION_REQ}\" --locked" >&2
+  echo "packc not found. Install with: ${PACKC_INSTALL_CMD}" >&2
   exit 1
 fi
 
 INSTALLED_PACKC_VERSION="$(${PACKC_BIN} --version | awk '{print $2}')"
 if [[ "${INSTALLED_PACKC_VERSION}" != "${PACKC_SERIES}"* ]]; then
-  echo "packc ${PACKC_SERIES%?} required (found ${INSTALLED_PACKC_VERSION}). Install with: cargo install packc --version \"${PACKC_VERSION_REQ}\" --locked --force" >&2
+  echo "packc ${PACKC_SERIES%?} required (found ${INSTALLED_PACKC_VERSION}). Install with: ${PACKC_INSTALL_CMD}" >&2
   exit 1
 fi
 
