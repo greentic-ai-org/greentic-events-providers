@@ -3,6 +3,16 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST_DIR="${ROOT_DIR}/dist/packs"
+# Derive install/series targets from environment.
+# If PACKC_VERSION (e.g. "0.4") is set, treat it as the series and build a semver range.
+if [ -n "${PACKC_VERSION:-}" ] && [ -z "${PACKC_VERSION_REQ:-}" ]; then
+  if [[ "${PACKC_VERSION}" =~ ^[0-9]+\.[0-9]+$ ]]; then
+    PACKC_VERSION_REQ="^${PACKC_VERSION}"
+    PACKC_SERIES="${PACKC_VERSION}."
+  else
+    PACKC_VERSION_REQ="${PACKC_VERSION}"
+  fi
+fi
 PACKC_VERSION_REQ="${PACKC_VERSION_REQ:-^0.4}"
 PACKC_SERIES="${PACKC_SERIES:-0.4.}"
 
