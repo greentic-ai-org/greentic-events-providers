@@ -1,3 +1,4 @@
+use provider_core::secrets::StaticSecretProvider;
 use provider_sms::{
     TwilioSinkConfig, TwilioSourceConfig, TwilioWebhookPayload, build_send_request,
 };
@@ -134,7 +135,12 @@ fn live_twilio_outbound_smoke() -> Result<(), Box<dyn Error>> {
         metadata: BTreeMap::new(),
     };
 
-    let req = build_send_request(&cfg, &envelope)?;
+    let secrets = StaticSecretProvider::new(BTreeMap::from([(
+        "TWILIO_AUTH_TOKEN".into(),
+        vars["TWILIO_AUTH_TOKEN"].as_bytes().to_vec(),
+    )]));
+
+    let req = build_send_request(&cfg, &envelope, &secrets)?;
     assert!(req.url.contains(&cfg.account_sid));
 
     if should_call_network() {

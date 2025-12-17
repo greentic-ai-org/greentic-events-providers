@@ -1,4 +1,5 @@
 use chrono::{DateTime, Utc};
+use provider_core::secrets::{SecretProvider, resolve_secret};
 use provider_core::{ProviderError, new_event};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -91,11 +92,50 @@ pub struct OutboundEmail {
 pub struct EmailSendRequest {
     pub provider: EmailProvider,
     pub payload: Value,
+    pub secret_events: Vec<greentic_types::EventEnvelope>,
+}
+
+/// Resolve provider-specific secrets and emit metadata-only events.
+pub fn ensure_email_secrets(
+    provider: EmailProvider,
+    secrets: &dyn SecretProvider,
+    tenant: greentic_types::TenantCtx,
+    source: &str,
+) -> Result<Vec<greentic_types::EventEnvelope>, ProviderError> {
+    let mut events = Vec::new();
+    match provider {
+        EmailProvider::MsGraph => {
+            let res = resolve_secret(
+                secrets,
+                "MSGRAPH_CLIENT_SECRET",
+                "tenant",
+                tenant,
+                source,
+                "msgraph client secret",
+            )?;
+            events.extend(res.events);
+        }
+        EmailProvider::Gmail => {
+            for key in ["GMAIL_CLIENT_SECRET", "GMAIL_REFRESH_TOKEN"] {
+                let res = resolve_secret(
+                    secrets,
+                    key,
+                    "tenant",
+                    tenant.clone(),
+                    source,
+                    "gmail credential",
+                )?;
+                events.extend(res.events);
+            }
+        }
+    }
+    Ok(events)
 }
 
 /// Translate an outbound EventEnvelope into a provider-specific request representation.
 pub fn build_send_request(
     event: &greentic_types::EventEnvelope,
+    secrets: &dyn SecretProvider,
 ) -> Result<EmailSendRequest, ProviderError> {
     let provider = detect_outbound_provider(&event.topic)?;
     let payload = event.payload.clone();
@@ -108,6 +148,13 @@ pub fn build_send_request(
         .get("from")
         .and_then(|v| v.as_str())
         .map(|s| s.to_string());
+
+    let secret_events = ensure_email_secrets(
+        provider.clone(),
+        secrets,
+        event.tenant.clone(),
+        "email-provider",
+    )?;
 
     match provider {
         EmailProvider::MsGraph => Ok(EmailSendRequest {
@@ -123,6 +170,7 @@ pub fn build_send_request(
                 },
                 "saveToSentItems": false
             }),
+            secret_events,
         }),
         EmailProvider::Gmail => Ok(EmailSendRequest {
             provider,
@@ -136,8 +184,17 @@ pub fn build_send_request(
                     "from": from_override,
                 }
             }),
+            secret_events,
         }),
     }
+}
+
+/// Convenience wrapper to resolve secrets via the Greentic secrets-store (wasm32).
+pub fn build_send_request_with_secrets_store(
+    event: &greentic_types::EventEnvelope,
+) -> Result<EmailSendRequest, ProviderError> {
+    let provider = provider_core::secrets::SecretsStoreProvider;
+    build_send_request(event, &provider)
 }
 
 fn detect_outbound_provider(topic: &str) -> Result<EmailProvider, ProviderError> {
@@ -189,8 +246,10 @@ fn optional_array_strings(payload: &Value, key: &str) -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use provider_core::secrets::StaticSecretProvider;
     use serde_json::json;
     use std::collections::BTreeMap;
+    use std::collections::BTreeMap as Map;
 
     fn sample_tenant() -> greentic_types::TenantCtx {
         use greentic_types::{EnvId, TeamId, TenantCtx, TenantId};
@@ -247,7 +306,11 @@ mod tests {
             metadata: BTreeMap::new(),
         };
 
-        let request = build_send_request(&event).expect("request");
+        let secrets = StaticSecretProvider::new(BTreeMap::from([(
+            "MSGRAPH_CLIENT_SECRET".into(),
+            b"secret".to_vec(),
+        )]));
+        let request = build_send_request(&event, &secrets).expect("request");
         assert_eq!(request.provider, EmailProvider::MsGraph);
         assert!(
             request
@@ -256,6 +319,8 @@ mod tests {
                 .and_then(|m| m.get("toRecipients"))
                 .is_some()
         );
+        assert_eq!(request.secret_events.len(), 1);
+        assert_eq!(request.secret_events[0].topic, "greentic.secrets.put");
     }
 
     #[test]
@@ -274,7 +339,43 @@ mod tests {
             metadata: BTreeMap::new(),
         };
 
-        let err = build_send_request(&event).unwrap_err();
+        let secrets = StaticSecretProvider::empty();
+        let err = build_send_request(&event, &secrets).unwrap_err();
         matches!(err, ProviderError::Config(_));
+    }
+
+    #[test]
+    fn resolves_msgraph_secret() {
+        let secrets = StaticSecretProvider::new(Map::from([(
+            "MSGRAPH_CLIENT_SECRET".into(),
+            b"secret".to_vec(),
+        )]));
+        let events = ensure_email_secrets(
+            EmailProvider::MsGraph,
+            &secrets,
+            sample_tenant(),
+            "email-provider",
+        )
+        .expect("events");
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].topic, "greentic.secrets.put");
+    }
+
+    #[test]
+    fn missing_gmail_secret_emits_missing_detected() {
+        let secrets = StaticSecretProvider::empty();
+        let events = ensure_email_secrets(
+            EmailProvider::Gmail,
+            &secrets,
+            sample_tenant(),
+            "email-provider",
+        )
+        .expect("events");
+        assert_eq!(events.len(), 2);
+        assert!(
+            events
+                .iter()
+                .all(|e| e.topic == "greentic.secrets.missing.detected")
+        );
     }
 }

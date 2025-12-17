@@ -1,16 +1,35 @@
-id: greentic.events.timer
+pack_id: greentic.events.timer
 version: 0.1.0
-packVersion: 1
 kind: application
+publisher: greentic
 name: greentic.events.timer
 description: Greentic timer/cron event providers
 authors:
   - Greentic Engineering <engineering@greentic.dev>
 license: MIT
-flow_files:
-  - flows/events/timer/default.ygtc
-template_dirs: []
-entry_flows: []
+components:
+  - id: events-timer-source
+    version: 1.0.0
+    world: greentic:events/source@1.0.0
+    supports:
+      - event
+    profiles:
+      default: stateless
+      supported:
+        - stateless
+    capabilities:
+      wasi:
+        clocks: true
+      host:
+        events:
+          inbound: false
+          outbound: true
+    wasm: components/stub.wasm
+flows:
+  - id: timer-default
+    file: flows/events/timer/default.ygtc
+    entrypoints:
+      - timer-default
 events:
   providers:
     - name: "timer-core"

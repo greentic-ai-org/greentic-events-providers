@@ -1,3 +1,4 @@
+use provider_core::secrets::{SecretProvider, resolve_secret};
 use provider_core::{ProviderError, new_event};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -74,23 +75,38 @@ pub struct TwilioSinkConfig {
     pub default_from: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TwilioSendRequest {
     pub account_sid: String,
     pub auth_token_ref: Option<String>,
     pub url: String,
     pub body: BTreeMap<String, String>,
+    pub secret_events: Vec<greentic_types::EventEnvelope>,
 }
 
 pub fn build_send_request(
     cfg: &TwilioSinkConfig,
     event: &greentic_types::EventEnvelope,
+    secrets: &dyn SecretProvider,
 ) -> Result<TwilioSendRequest, ProviderError> {
     if !event.topic.starts_with("sms.out.twilio") {
         return Err(ProviderError::Config(format!(
             "unsupported sms topic {}",
             event.topic
         )));
+    }
+
+    let mut secret_events = Vec::new();
+    if let Some(key) = cfg.auth_token_ref.as_ref() {
+        let resolution = resolve_secret(
+            secrets,
+            key,
+            "tenant",
+            event.tenant.clone(),
+            "sms-provider",
+            "twilio auth token",
+        )?;
+        secret_events.extend(resolution.events);
     }
 
     let to = expect_string(&event.payload, "to")?;
@@ -117,7 +133,17 @@ pub fn build_send_request(
             cfg.account_sid
         ),
         body: form,
+        secret_events,
     })
+}
+
+/// Convenience wrapper that resolves secrets via the Greentic secrets-store (wasm32).
+pub fn build_send_request_with_secrets_store(
+    cfg: &TwilioSinkConfig,
+    event: &greentic_types::EventEnvelope,
+) -> Result<TwilioSendRequest, ProviderError> {
+    let provider = provider_core::secrets::SecretsStoreProvider;
+    build_send_request(cfg, event, &provider)
 }
 
 fn expect_string(value: &Value, key: &str) -> Result<String, ProviderError> {
@@ -131,7 +157,9 @@ fn expect_string(value: &Value, key: &str) -> Result<String, ProviderError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use provider_core::secrets::StaticSecretProvider;
     use serde_json::json;
+    use std::collections::BTreeMap as Map;
 
     fn tenant() -> greentic_types::TenantCtx {
         use greentic_types::{EnvId, TenantCtx, TenantId};
@@ -145,7 +173,7 @@ mod tests {
     fn maps_twilio_webhook_to_event() {
         let cfg = TwilioSourceConfig {
             phone_aliases: BTreeMap::from([("+15550001".into(), "support".into())]),
-            signing_secret_ref: Some("events/sms/dev/acme/twilio".into()),
+            signing_secret_ref: Some("TWILIO_AUTH_TOKEN".into()),
         };
         let payload = TwilioWebhookPayload {
             from: "+15559999".into(),
@@ -166,7 +194,7 @@ mod tests {
     fn builds_send_request() {
         let cfg = TwilioSinkConfig {
             account_sid: "AC123".into(),
-            auth_token_ref: Some("events/sms/dev/acme/twilio".into()),
+            auth_token_ref: Some("TWILIO_AUTH_TOKEN".into()),
             default_from: Some("+15550001".into()),
         };
         let event = greentic_types::EventEnvelope {
@@ -182,8 +210,41 @@ mod tests {
             metadata: BTreeMap::new(),
         };
 
-        let req = build_send_request(&cfg, &event).expect("req");
+        let secrets =
+            StaticSecretProvider::new(Map::from([("TWILIO_AUTH_TOKEN".into(), b"token".to_vec())]));
+        let req = build_send_request(&cfg, &event, &secrets).expect("req");
         assert_eq!(req.body.get("To"), Some(&"+15559999".into()));
         assert_eq!(req.body.get("From"), Some(&"+15550001".into()));
+        assert_eq!(req.secret_events.len(), 1);
+        assert_eq!(req.secret_events[0].topic, "greentic.secrets.put");
+    }
+
+    #[test]
+    fn missing_secret_emits_missing_detected() {
+        let cfg = TwilioSinkConfig {
+            account_sid: "AC123".into(),
+            auth_token_ref: Some("TWILIO_AUTH_TOKEN".into()),
+            default_from: Some("+15550001".into()),
+        };
+        let event = greentic_types::EventEnvelope {
+            id: greentic_types::EventId::new("evt-2").unwrap(),
+            topic: "sms.out.twilio".into(),
+            r#type: "t".into(),
+            source: "s".into(),
+            tenant: tenant(),
+            subject: None,
+            time: chrono::Utc::now(),
+            correlation_id: None,
+            payload: json!({"to": "+15559999", "body": "Hello"}),
+            metadata: BTreeMap::new(),
+        };
+
+        let secrets = StaticSecretProvider::empty();
+        let req = build_send_request(&cfg, &event, &secrets).expect("req");
+        assert_eq!(req.secret_events.len(), 1);
+        assert_eq!(
+            req.secret_events[0].topic,
+            "greentic.secrets.missing.detected"
+        );
     }
 }

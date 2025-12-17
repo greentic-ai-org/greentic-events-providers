@@ -1,6 +1,7 @@
 pub mod config;
 pub mod error;
 pub mod events;
+pub mod secrets;
 pub mod tenant_secrets;
 
 pub use config::{HttpEndpointConfig, Schedule, SchedulerConfig, WebhookRoute};

@@ -3,10 +3,17 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST_DIR="${ROOT_DIR}/dist/packs"
+PACKC_VERSION="${PACKC_VERSION:-0.4}"
 
 PACKC_BIN="$(command -v packc || true)"
 if [ -z "${PACKC_BIN}" ]; then
-  echo "packc not found. Install with: cargo install packc --locked" >&2
+  echo "packc not found. Install with: cargo install packc --version ${PACKC_VERSION} --locked" >&2
+  exit 1
+fi
+
+INSTALLED_PACKC_VERSION="$(${PACKC_BIN} --version | awk '{print $2}')"
+if [[ "${INSTALLED_PACKC_VERSION}" != "${PACKC_VERSION}" && "${INSTALLED_PACKC_VERSION}" != ${PACKC_VERSION}.* ]]; then
+  echo "packc ${PACKC_VERSION}.x required (found ${INSTALLED_PACKC_VERSION}). Install with: cargo install packc --version ${PACKC_VERSION} --locked --force" >&2
   exit 1
 fi
 
@@ -48,9 +55,14 @@ for pack in "${ROOT_DIR}"/packs/events/*.yaml; do
   work_dir="${TMP_ROOT}/${name}"
   mkdir -p "${work_dir}"
 
-  # copy manifest as pack.yaml and supporting flows
+  # copy manifest as pack.yaml and supporting assets
   cp "${pack}" "${work_dir}/pack.yaml"
-  rsync -a "${ROOT_DIR}/flows" "${work_dir}/"
+  if [ -d "${ROOT_DIR}/flows" ]; then
+    rsync -a "${ROOT_DIR}/flows" "${work_dir}/"
+  fi
+  if [ -d "${ROOT_DIR}/packs/components" ]; then
+    rsync -a "${ROOT_DIR}/packs/components/" "${work_dir}/components/"
+  fi
 
   echo "Building pack: ${pack} -> ${out}"
   "${PACKC_BIN}" build \

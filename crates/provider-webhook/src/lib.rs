@@ -1,9 +1,16 @@
+use provider_core::secrets::{SecretProvider, resolve_secret};
 use provider_core::{
     HttpEndpointConfig, ProviderError, WebhookRoute, new_event, set_idempotency_key,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeMap;
+
+/// Result of handling a webhook request, including secrets metadata events.
+pub struct WebhookResult {
+    pub event: greentic_types::EventEnvelope,
+    pub secret_events: Vec<greentic_types::EventEnvelope>,
+}
 
 /// Minimal representation of an inbound HTTP request supplied by the host/runner.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -28,11 +35,22 @@ impl WebhookSource {
         Self { config }
     }
 
+    /// Resolve secrets via the Greentic secrets-store inside the component (wasm32).
+    pub fn handle_request_with_secrets_store(
+        &self,
+        tenant: greentic_types::TenantCtx,
+        request: InboundHttpRequest,
+    ) -> Result<WebhookResult, ProviderError> {
+        let provider = provider_core::secrets::SecretsStoreProvider;
+        self.handle_request(tenant, request, &provider)
+    }
+
     pub fn handle_request(
         &self,
         tenant: greentic_types::TenantCtx,
         request: InboundHttpRequest,
-    ) -> Result<greentic_types::EventEnvelope, ProviderError> {
+        secrets: &dyn SecretProvider,
+    ) -> Result<WebhookResult, ProviderError> {
         let route = self
             .match_route(&request.path)
             .ok_or_else(|| ProviderError::Config(format!("no route for path {}", request.path)))?;
@@ -53,16 +71,21 @@ impl WebhookSource {
         let event_type = detect_event_type(&request.body).unwrap_or_else(|| "received".to_string());
         let topic = format!("{}.{}", route.topic_prefix, event_type);
 
-        Ok(new_event(
-            topic,
-            "com.greentic.webhook.generic.v1",
-            "webhook-gateway",
-            tenant,
-            Some(request.path.clone()),
-            request.correlation_id.clone(),
-            request.body.clone(),
-            metadata,
-        ))
+        let secret_events = resolve_webhook_secret(route, secrets, tenant.clone())?;
+
+        Ok(WebhookResult {
+            event: new_event(
+                topic,
+                "com.greentic.webhook.generic.v1",
+                "webhook-gateway",
+                tenant,
+                Some(request.path.clone()),
+                request.correlation_id.clone(),
+                request.body.clone(),
+                metadata,
+            ),
+            secret_events,
+        })
     }
 
     fn match_route(&self, path: &str) -> Option<&WebhookRoute> {
@@ -84,6 +107,27 @@ impl WebhookSource {
             metadata.insert(format!("header:{}", key.to_lowercase()), value.clone());
         }
         metadata
+    }
+}
+
+/// Resolve a signing secret (when configured) and emit metadata-only events.
+pub fn resolve_webhook_secret(
+    route: &WebhookRoute,
+    secrets: &dyn SecretProvider,
+    tenant: greentic_types::TenantCtx,
+) -> Result<Vec<greentic_types::EventEnvelope>, ProviderError> {
+    if let Some(key) = route.secret_ref.as_ref() {
+        let resolution = resolve_secret(
+            secrets,
+            key,
+            "tenant",
+            tenant,
+            "webhook-gateway",
+            "webhook signing secret",
+        )?;
+        Ok(resolution.events)
+    } else {
+        Ok(Vec::new())
     }
 }
 
@@ -145,6 +189,7 @@ fn detect_event_type(body: &Value) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use provider_core::secrets::StaticSecretProvider;
     use provider_core::{HttpEndpointConfig, WebhookRoute};
     use serde_json::json;
 
@@ -163,7 +208,7 @@ mod tests {
             routes: vec![
                 WebhookRoute {
                     path: "/stripe".into(),
-                    secret_ref: Some("events/webhook/dev/acme/stripe".into()),
+                    secret_ref: Some("WEBHOOK_SIGNING_SECRET".into()),
                     topic_prefix: "webhook.stripe".into(),
                 },
                 WebhookRoute {
@@ -187,18 +232,27 @@ mod tests {
             signature_validated: true,
         };
 
-        let event = source
-            .handle_request(sample_tenant(), req.clone())
+        let secrets = StaticSecretProvider::new(BTreeMap::from([(
+            "WEBHOOK_SIGNING_SECRET".into(),
+            b"sig".to_vec(),
+        )]));
+        let result = source
+            .handle_request(sample_tenant(), req.clone(), &secrets)
             .expect("event");
 
-        assert_eq!(event.topic, "webhook.stripe.payment_succeeded");
-        assert_eq!(event.subject, Some("/webhook/stripe".into()));
-        assert_eq!(event.payload, req.body);
+        assert_eq!(result.event.topic, "webhook.stripe.payment_succeeded");
+        assert_eq!(result.event.subject, Some("/webhook/stripe".into()));
+        assert_eq!(result.event.payload, req.body);
         assert_eq!(
-            event.metadata.get("idempotency_key"),
+            result.event.metadata.get("idempotency_key"),
             Some(&"idem-1".to_string())
         );
-        assert_eq!(event.metadata.get("signature_valid"), Some(&"true".into()));
+        assert_eq!(
+            result.event.metadata.get("signature_valid"),
+            Some(&"true".into())
+        );
+        assert_eq!(result.secret_events.len(), 1);
+        assert_eq!(result.secret_events[0].topic, "greentic.secrets.put");
     }
 
     #[test]
@@ -226,5 +280,37 @@ mod tests {
             outgoing.headers.get("x-correlation-id"),
             Some(&"req-1".to_string())
         );
+    }
+
+    #[test]
+    fn resolves_signing_secret() {
+        let route = WebhookRoute {
+            path: "/stripe".into(),
+            secret_ref: Some("WEBHOOK_SIGNING_SECRET".into()),
+            topic_prefix: "webhook.stripe".into(),
+        };
+        let secrets = StaticSecretProvider::new(BTreeMap::from([(
+            "WEBHOOK_SIGNING_SECRET".into(),
+            b"sig".to_vec(),
+        )]));
+
+        let events =
+            resolve_webhook_secret(&route, &secrets, sample_tenant()).expect("events present");
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].topic, "greentic.secrets.put");
+    }
+
+    #[test]
+    fn missing_signing_secret_emits_missing_detected() {
+        let route = WebhookRoute {
+            path: "/stripe".into(),
+            secret_ref: Some("WEBHOOK_SIGNING_SECRET".into()),
+            topic_prefix: "webhook.stripe".into(),
+        };
+        let secrets = StaticSecretProvider::empty();
+        let events =
+            resolve_webhook_secret(&route, &secrets, sample_tenant()).expect("events present");
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].topic, "greentic.secrets.missing.detected");
     }
 }

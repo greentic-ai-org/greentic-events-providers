@@ -42,8 +42,9 @@ fn live_webhook_smoke() -> Result<(), Box<dyn Error>> {
         correlation_id: Some("live-webhook-1".into()),
         signature_validated: true,
     };
-    let event = source.handle_request(sample_tenant(), request)?;
-    assert!(event.topic.starts_with("webhook.live"));
+    let secrets = provider_core::secrets::StaticSecretProvider::empty();
+    let result = source.handle_request(sample_tenant(), request, &secrets)?;
+    assert!(result.event.topic.starts_with("webhook.live"));
 
     // Optional: call a real HTTP echo to mimic host bridge if enabled.
     if should_call_network() {

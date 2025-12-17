@@ -4,7 +4,8 @@ This repository ships reusable WASM event providers plus packs so `greentic-even
 
 - Providers implement `greentic:events@1.0.0` via `greentic-interfaces-guest`.
 - Hosts/deployer own HTTP servers, schedulers, and OAuth/token plumbing; components stay pure and deterministic.
-- Secrets follow `events/<provider>/<tenant>/...` conventions through `greentic-secrets`.
+- Secrets are provisioned via `greentic-secrets` using pack `secret_requirements`; no env-var fallbacks.
+- Secrets events use metadata-only payloads on `greentic.secrets.put|delete|rotate.*|missing.detected` topics.
 - OAuth flows (MS Graph/Gmail) go through `greentic-oauth-sdk`.
 
 Families included:

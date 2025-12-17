@@ -1,17 +1,78 @@
-id: greentic.events.sms
+pack_id: greentic.events.sms
 version: 0.1.0
-packVersion: 1
 kind: application
+publisher: greentic
 name: greentic.events.sms
 description: Greentic SMS event providers (Twilio)
 authors:
   - Greentic Engineering <engineering@greentic.dev>
 license: MIT
-flow_files:
-  - flows/events/sms/in_default.ygtc
-  - flows/events/sms/out_default.ygtc
-template_dirs: []
-entry_flows: []
+components:
+  - id: events-sms-source
+    version: 1.0.0
+    world: greentic:events/source@1.0.0
+    supports:
+      - event
+    profiles:
+      default: stateless
+      supported:
+        - stateless
+    capabilities:
+      wasi:
+        clocks: true
+      host:
+        secrets:
+          required:
+            - key: TWILIO_AUTH_TOKEN
+              required: true
+              description: Auth token used to validate Twilio webhook signatures
+              scope:
+                env: "{{env}}"
+                tenant: "{{tenant}}"
+              format: text
+        events:
+          inbound: false
+          outbound: true
+        http:
+          server: true
+    wasm: components/stub.wasm
+  - id: events-sms-sink
+    version: 1.0.0
+    world: greentic:events/sink@1.0.0
+    supports:
+      - event
+    profiles:
+      default: stateless
+      supported:
+        - stateless
+    capabilities:
+      wasi:
+        clocks: true
+      host:
+        secrets:
+          required:
+            - key: TWILIO_AUTH_TOKEN
+              required: true
+              description: Auth token used to sign Twilio REST requests
+              scope:
+                env: "{{env}}"
+                tenant: "{{tenant}}"
+              format: text
+        events:
+          inbound: true
+          outbound: false
+        http:
+          client: true
+    wasm: components/stub.wasm
+flows:
+  - id: sms-in-default
+    file: flows/events/sms/in_default.ygtc
+    entrypoints:
+      - sms-in-default
+  - id: sms-out-default
+    file: flows/events/sms/out_default.ygtc
+    entrypoints:
+      - sms-out-default
 events:
   providers:
     - name: "sms-in-twilio"

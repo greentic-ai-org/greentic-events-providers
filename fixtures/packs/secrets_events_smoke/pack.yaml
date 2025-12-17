@@ -1,0 +1,34 @@
+pack_id: greentic.events.secrets.fixture
+version: 0.0.1
+kind: application
+publisher: greentic
+name: greentic.events.secrets.fixture
+description: Minimal smoke pack for secrets workflow topics and requirements
+components:
+  - id: secrets-events-smoke
+    version: 1.0.0
+    world: greentic:events/source@1.0.0
+    supports:
+      - event
+    profiles:
+      default: stateless
+      supported:
+        - stateless
+    capabilities:
+      wasi:
+        clocks: true
+      host:
+        secrets:
+          required:
+            - key: TEST_API_KEY
+              required: true
+              description: Test API key used by the secrets smoke component
+              scope:
+                env: "{{env}}"
+                tenant: "{{tenant}}"
+              format: text
+        events:
+          inbound: false
+          outbound: true
+    wasm: stub.wasm
+flows: []

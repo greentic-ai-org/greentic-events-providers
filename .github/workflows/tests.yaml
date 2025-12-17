@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       RUSTUP_TOOLCHAIN: 1.89.0
+      PACKC_VERSION: "0.4"
     steps:
       - uses: actions/checkout@v4
       - name: Set up Rust
@@ -27,8 +28,8 @@ jobs:
           rustup target list --toolchain "${RUSTUP_TOOLCHAIN}" --installed
       - name: Install packc (skip if cached)
         run: |
-          if ! command -v packc >/dev/null 2>&1; then
-            cargo install packc --locked
+          if ! command -v packc >/dev/null 2>&1 || [[ "$(packc --version)" != packc\ ${PACKC_VERSION}* ]]; then
+            cargo install packc --version "${PACKC_VERSION}" --locked --force
           fi
       - name: Local check (fmt + clippy + test + packs)
         run: PACKC_DEBUG=1 ci/local_check.sh

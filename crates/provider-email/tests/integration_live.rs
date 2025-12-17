@@ -193,7 +193,18 @@ fn live_gmail_integration_smoke() -> Result<(), Box<dyn Error>> {
         metadata: BTreeMap::new(),
     };
 
-    let request = build_send_request(&envelope)?;
+    let secrets = provider_core::secrets::StaticSecretProvider::new(BTreeMap::from([
+        (
+            "GMAIL_CLIENT_SECRET".into(),
+            vars["GMAIL_CLIENT_SECRET"].as_bytes().to_vec(),
+        ),
+        (
+            "GMAIL_REFRESH_TOKEN".into(),
+            vars["GMAIL_REFRESH_TOKEN"].as_bytes().to_vec(),
+        ),
+    ]));
+
+    let request = build_send_request(&envelope, &secrets)?;
     assert_eq!(request.provider, EmailProvider::Gmail);
     Ok(())
 }

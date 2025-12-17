@@ -1,17 +1,104 @@
-id: greentic.events.email
+pack_id: greentic.events.email
 version: 0.1.0
-packVersion: 1
 kind: application
+publisher: greentic
 name: greentic.events.email
 description: Greentic email event providers (MS Graph / Gmail)
 authors:
   - Greentic Engineering <engineering@greentic.dev>
 license: MIT
-flow_files:
-  - flows/events/email/in_default.ygtc
-  - flows/events/email/out_default.ygtc
-template_dirs: []
-entry_flows: []
+components:
+  - id: events-email-source
+    version: 1.0.0
+    world: greentic:events/source@1.0.0
+    supports:
+      - event
+    profiles:
+      default: stateless
+      supported:
+        - stateless
+    capabilities:
+      wasi:
+        clocks: true
+      host:
+        secrets:
+          required:
+            - key: MSGRAPH_CLIENT_SECRET
+              required: true
+              description: Client secret for the configured Microsoft Graph app registration
+              scope:
+                env: "{{env}}"
+                tenant: "{{tenant}}"
+              format: text
+            - key: GMAIL_CLIENT_SECRET
+              required: true
+              description: Client secret for the configured Google Workspace project
+              scope:
+                env: "{{env}}"
+                tenant: "{{tenant}}"
+              format: text
+            - key: GMAIL_REFRESH_TOKEN
+              required: true
+              description: Refresh token for the service account or delegated Gmail user
+              scope:
+                env: "{{env}}"
+                tenant: "{{tenant}}"
+              format: text
+        events:
+          inbound: false
+          outbound: true
+    wasm: components/stub.wasm
+  - id: events-email-sink
+    version: 1.0.0
+    world: greentic:events/sink@1.0.0
+    supports:
+      - event
+    profiles:
+      default: stateless
+      supported:
+        - stateless
+    capabilities:
+      wasi:
+        clocks: true
+      host:
+        secrets:
+          required:
+            - key: MSGRAPH_CLIENT_SECRET
+              required: true
+              description: Client secret for the configured Microsoft Graph app registration
+              scope:
+                env: "{{env}}"
+                tenant: "{{tenant}}"
+              format: text
+            - key: GMAIL_CLIENT_SECRET
+              required: true
+              description: Client secret for the configured Google Workspace project
+              scope:
+                env: "{{env}}"
+                tenant: "{{tenant}}"
+              format: text
+            - key: GMAIL_REFRESH_TOKEN
+              required: true
+              description: Refresh token for the service account or delegated Gmail user
+              scope:
+                env: "{{env}}"
+                tenant: "{{tenant}}"
+              format: text
+        events:
+          inbound: true
+          outbound: false
+        http:
+          client: true
+    wasm: components/stub.wasm
+flows:
+  - id: email-in-default
+    file: flows/events/email/in_default.ygtc
+    entrypoints:
+      - email-in-default
+  - id: email-out-default
+    file: flows/events/email/out_default.ygtc
+    entrypoints:
+      - email-out-default
 events:
   providers:
     - name: "email-in-msgraph"

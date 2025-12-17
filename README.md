@@ -17,7 +17,7 @@ Reusable Greentic event providers shipped as WASM components plus packs for `gre
 - `docs/` – overview + per-provider notes.
 - `packs/events/` – YAML packs consumed by greentic-events/deployer.
 - `flows/events/` – default/custom flow stubs referenced by packs.
-- `scripts/build_packs.sh` – builds validated `*.gtpack` artifacts via `packc` (requires `cargo install greentic-pack --locked`).
+- `scripts/build_packs.sh` – builds validated `*.gtpack` artifacts via `packc` (use `cargo install packc --version 0.4 --locked` to stay on the latest 0.4.x).
 - `.github/workflows/publish-packs.yaml` – builds `*.gtpack` with `packc` and publishes to GHCR on tags.
 - `ci/local_check.sh` – run fmt + clippy + tests + pack build locally (mirrors CI).
 - `.github/workflows/tests.yaml` – CI for fmt/clippy/tests; live tests gated by vars; builds packs.
@@ -31,7 +31,14 @@ Reusable Greentic event providers shipped as WASM components plus packs for `gre
 ## Developing
 - Build with `cargo build` (workspace).
 - Run tests with `cargo test`.
-- Packs are validated/built via `packc` into `dist/packs/*.gtpack`; flows remain minimal placeholders but satisfy schema.
+- Packs are validated/built via `packc` (0.4.x) into `dist/packs/*.gtpack`; flows remain minimal placeholders but satisfy schema.
+
+## Secrets workflow
+- Packs declare `secret_requirements` inside component capabilities; run `scripts/build_packs.sh` then `greentic-secrets init --pack dist/packs/<pack>.gtpack` to provision required keys.
+- Components resolve credentials through `greentic:secrets-store@1.0.0` only (no env/URI fallbacks in production paths) and return `secret_events` metadata alongside their main operations for hosts to forward.
+- Secrets events use metadata-only payloads on standardized topics: `greentic.secrets.put`, `greentic.secrets.delete`, `greentic.secrets.rotate.requested`, `greentic.secrets.rotate.completed`, and `greentic.secrets.missing.detected`.
+- Payloads include key/scope/tenant context and outcomes only—never secret bytes or base64 encodings.
+- Host wiring examples live in `docs/hosts_secrets.md`.
 
 ## Integration testing against real services
 The CI/pipeline can run live integration tests per provider when the relevant secrets are present. If a provider’s secrets are missing, tests should emit a warning and skip that provider.
