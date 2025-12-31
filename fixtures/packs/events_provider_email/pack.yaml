@@ -1,0 +1,48 @@
+pack_id: greentic.events.provider.email
+version: 0.1.0
+kind: application
+publisher: greentic
+name: greentic.events.provider.email
+description: Provider-core email events adapter that queues send requests in state-store
+authors:
+  - Greentic Engineering <engineering@greentic.dev>
+license: MIT
+components:
+  - id: events-provider-email
+    version: 0.1.0
+    world: greentic:provider/schema-core@1.0.0
+    supports: []
+    profiles:
+      default: stateless
+      supported:
+        - stateless
+    capabilities:
+      wasi:
+        clocks: true
+      host:
+        state:
+          store: true
+    config_schema: schemas/events/email/config.schema.json
+    wasm: components/events-provider-email.wasm
+extensions:
+  greentic.ext.provider:
+    kind: greentic.ext.provider
+    version: "1.0.0"
+    inline:
+      providers:
+        - provider_type: "events.email"
+          capabilities:
+            - publish
+          ops:
+            - publish
+          config_schema_ref: "schemas/events/email/config.schema.json"
+          state_schema_ref: "schemas/events/email/README.md"
+          docs_ref: "schemas/events/email/README.md"
+          runtime:
+            component_ref: "events-provider-email"
+            export: "schema-core"
+            world: "greentic:provider/schema-core@1.0.0"
+flows: []
+assets:
+  - path: schemas/events/email/config.schema.json
+  - path: schemas/events/email/README.md

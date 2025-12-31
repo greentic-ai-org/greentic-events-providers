@@ -1,0 +1,48 @@
+pack_id: greentic.events.provider.dummy
+version: 0.1.0
+kind: application
+publisher: greentic
+name: greentic.events.provider.dummy
+description: Deterministic dummy events provider for CI and fixture tests
+authors:
+  - Greentic Engineering <engineering@greentic.dev>
+license: MIT
+components:
+  - id: events-provider-dummy
+    version: 0.1.0
+    world: greentic:provider/schema-core@1.0.0
+    supports: []
+    profiles:
+      default: stateless
+      supported:
+        - stateless
+    capabilities:
+      wasi:
+        clocks: true
+      host: {}
+    config_schema: schemas/events/dummy/config.schema.json
+    wasm: components/events-provider-dummy.wasm
+extensions:
+  greentic.ext.provider:
+    kind: greentic.ext.provider
+    version: "1.0.0"
+    inline:
+      providers:
+        - provider_type: "events.dummy"
+          capabilities:
+            - publish
+          ops:
+            - publish
+            - echo
+          config_schema_ref: "schemas/events/dummy/config.schema.json"
+          state_schema_ref: "schemas/events/dummy/state.schema.json"
+          docs_ref: "schemas/events/dummy/README.md"
+          runtime:
+            component_ref: "events-provider-dummy"
+            export: "schema-core"
+            world: "greentic:provider/schema-core@1.0.0"
+flows: []
+assets:
+  - path: schemas/events/dummy/config.schema.json
+  - path: schemas/events/dummy/state.schema.json
+  - path: schemas/events/dummy/README.md

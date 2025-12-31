@@ -1,0 +1,23 @@
+[package]
+name = "events-provider-webhook"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.89"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+anyhow.workspace = true
+greentic-interfaces-guest = { version = "0.4.69", default-features = false, features = [
+    "provider-core-v1",
+    "http-client",
+    "types-core",
+] }
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+uuid.workspace = true
+
+[dev-dependencies]
+greentic-types.workspace = true
+tempfile = "3"

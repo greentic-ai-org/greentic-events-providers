@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Timer events provider config",
+  "type": "object",
+  "properties": {
+    "timezone": {
+      "type": "string",
+      "description": "IANA timezone identifier used when scheduling timer events.",
+      "default": "UTC"
+    },
+    "default_delay_seconds": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Optional default delay to apply when scheduling events."
+    },
+    "persistence_key_prefix": {
+      "type": "string",
+      "description": "Optional override for the state-store key prefix (defaults to events/timer/scheduled)."
+    }
+  },
+  "additionalProperties": false
+}
