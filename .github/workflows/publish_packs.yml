@@ -47,7 +47,7 @@ jobs:
 
       - name: Build pack artifacts
         env:
-          PACKC_SERIES: "${PACKC_VERSION}."
+          PACKC_SERIES: "${{ env.PACKC_VERSION }}."
         run: bash scripts/build_packs.sh
 
       - name: Install jq

@@ -144,12 +144,15 @@ fn live_twilio_outbound_smoke() -> Result<(), Box<dyn Error>> {
     assert!(req.url.contains(&cfg.account_sid));
 
     if should_call_network() {
-        if !req.url.starts_with("https://") {
-            return Err(format!("Refusing to send over non-HTTPS URL: {}", req.url).into());
+        let url = reqwest::Url::parse(&req.url)?;
+        if url.scheme() != "https" {
+            return Err(format!("Refusing to send over non-HTTPS URL: {}", url).into());
         }
-        let client = reqwest::blocking::Client::new();
+        let client = reqwest::blocking::Client::builder()
+            .https_only(true)
+            .build()?;
         let res = client
-            .post(&req.url)
+            .post(url)
             .basic_auth(&cfg.account_sid, Some(&vars["TWILIO_AUTH_TOKEN"]))
             .form(&req.body)
             .send()?;
