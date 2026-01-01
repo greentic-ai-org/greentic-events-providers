@@ -6,7 +6,7 @@ Reusable Greentic event providers shipped as WASM components plus packs for `gre
 - Provider families: webhook (HTTP in/out), email (MS Graph / Gmail), sms (Twilio), timer (cron/interval).
 - WASM components implement `greentic:events@1.0.0` worlds via `greentic-interfaces-guest`.
 - Packs under `packs/events` declare providers for discovery and deployment.
-- Example flows under `flows/events` reference the packs.
+- Example flows live under `packs/events-*/flows` alongside each pack.
 
 ## Structure
 - `crates/provider-core` – shared configs, helpers, errors.
@@ -16,7 +16,7 @@ Reusable Greentic event providers shipped as WASM components plus packs for `gre
 - `crates/provider-timer` – cron/interval source.
 - `docs/` – overview + per-provider notes.
 - `packs/events/` – YAML packs consumed by greentic-events/deployer.
-- `flows/events/` – default/custom flow stubs referenced by packs.
+- `packs/events-*/flows/` – default/custom flow stubs referenced by packs.
 - `scripts/build_packs.sh` – builds validated `*.gtpack` artifacts via `packc` (use `cargo install packc --locked`; optionally set `PACKC_SERIES=0.4.` in CI to enforce a series).
 - `.github/workflows/publish-packs.yaml` – builds `*.gtpack` with `packc` and publishes to GHCR on tags.
 - `ci/local_check.sh` – run fmt + clippy + tests + pack build locally (mirrors CI).

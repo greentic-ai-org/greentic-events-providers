@@ -92,11 +92,11 @@ components:
     wasm: components/stub.wasm
 flows:
   - id: email-in-default
-    file: flows/events/email/in_default.ygtc
+    file: flows/in_default.ygtc
     entrypoints:
       - email-in-default
   - id: email-out-default
-    file: flows/events/email/out_default.ygtc
+    file: flows/out_default.ygtc
     entrypoints:
       - email-out-default
 events:

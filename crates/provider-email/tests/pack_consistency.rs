@@ -69,7 +69,7 @@ struct SecretRequirement {
 
 #[test]
 fn email_pack_parses() {
-    let raw = fs::read_to_string(Path::new("../../packs/events/email.yaml")).unwrap();
+    let raw = fs::read_to_string(Path::new("../../packs/events-email/pack.yaml")).unwrap();
     let pack: Pack = serde_yaml_bw::from_str(&raw).unwrap();
     assert_eq!(pack.pack_id, "greentic.events.email");
     assert_eq!(pack.events.providers.len(), 4);

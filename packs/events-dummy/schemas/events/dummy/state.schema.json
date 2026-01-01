@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Dummy events provider state",
+  "type": "object",
+  "description": "State snapshot emitted by the dummy events provider for CI smoke tests.",
+  "properties": {
+    "last_published": {
+      "type": "object",
+      "description": "Raw JSON payload from the last publish operation.",
+      "additionalProperties": true
+    },
+    "last_receipt_id": {
+      "type": "string",
+      "description": "Deterministic receipt ID generated from the last publish payload."
+    }
+  },
+  "additionalProperties": true
+}

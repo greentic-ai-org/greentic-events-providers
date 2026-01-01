@@ -69,7 +69,7 @@ struct SecretRequirement {
 
 #[test]
 fn timer_pack_parses() {
-    let raw = fs::read_to_string(Path::new("../../packs/events/timer.yaml")).unwrap();
+    let raw = fs::read_to_string(Path::new("../../packs/events-timer/pack.yaml")).unwrap();
     let pack: Pack = serde_yaml_bw::from_str(&raw).unwrap();
     assert_eq!(pack.events.providers.len(), 1);
     assert_eq!(pack.pack_id, "greentic.events.timer");

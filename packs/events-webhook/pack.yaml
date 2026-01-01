@@ -38,19 +38,19 @@ components:
     wasm: components/stub.wasm
 flows:
   - id: webhook-in-default
-    file: flows/events/webhook/in_default.ygtc
+    file: flows/in_default.ygtc
     entrypoints:
       - webhook-in-default
   - id: webhook-in-custom-template
-    file: flows/events/webhook/in_custom_template.ygtc
+    file: flows/in_custom_template.ygtc
     entrypoints: []
 events:
   providers:
     - name: "webhook-gateway"
       kind: "source"
       component: "events-webhook-source@1.0.0"
-      default_flow: "flows/events/webhook/in_default.ygtc"
-      custom_flow: "flows/events/webhook/in_custom_template.ygtc"
+      default_flow: "flows/in_default.ygtc"
+      custom_flow: "flows/in_custom_template.ygtc"
       capabilities:
         transport: "webhook"
         reliability: "at_least_once"

@@ -1,0 +1,74 @@
+name: Publish Packs OCI
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag to publish (defaults to git tag or workspace version)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    env:
+      RUSTUP_TOOLCHAIN: 1.89.0
+      PACKC_VERSION: "0.4"
+      REGISTRY: ghcr.io
+      OWNER: greentic-ai
+      REPO: greentic-packs
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: 1.89.0
+          override: true
+
+      - name: Install wasm32-wasip2 target
+        run: rustup target add wasm32-wasip2 --toolchain "${RUSTUP_TOOLCHAIN}"
+
+      - name: Install packc (skip if cached)
+        run: |
+          if ! command -v packc >/dev/null 2>&1 || [[ "$(packc --version)" != packc\ ${PACKC_VERSION}* ]]; then
+            cargo install packc --force --locked
+          fi
+
+      - name: Build pack artifacts
+        env:
+          PACKC_SERIES: "${PACKC_VERSION}."
+        run: bash scripts/build_packs.sh
+
+      - name: Install jq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Install ORAS
+        uses: oras-project/setup-oras@v1
+        with:
+          version: "1.2.0"
+
+      - name: Login to GHCR
+        env:
+          CR_PAT: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "${CR_PAT}" | oras login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Publish packs to GHCR
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+          REGISTRY: ${{ env.REGISTRY }}
+          OWNER: ${{ env.OWNER }}
+          REPO: ${{ env.REPO }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: bash scripts/publish_packs_oci.sh

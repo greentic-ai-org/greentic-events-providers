@@ -27,7 +27,7 @@ components:
     wasm: components/stub.wasm
 flows:
   - id: timer-default
-    file: flows/events/timer/default.ygtc
+    file: flows/default.ygtc
     entrypoints:
       - timer-default
 events:

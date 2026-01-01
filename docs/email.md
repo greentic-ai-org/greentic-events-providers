@@ -8,5 +8,5 @@ Purpose: inbound/outbound email events through Microsoft Graph or Gmail/Google W
 - Outbound: component builds provider-specific send payloads; host executes HTTP/SMTP. `EmailSendRequest` includes `secret_events` for hosts to forward before/alongside the send.
 - Secrets/tokens: secrets provisioned via `greentic-secrets` using requirements in the pack (`MSGRAPH_CLIENT_SECRET`, `GMAIL_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN`); components read via `greentic:secrets-store@1.0.0` (no env fallbacks).
 - Secrets events: emit metadata-only payloads on `greentic.secrets.put|delete|rotate.*|missing.detected` when secrets are resolved or missing (no values).
-- Packs: `packs/events/email.yaml`.
-- Flows: `flows/events/email/in_default.ygtc`, `flows/events/email/out_default.ygtc`.
+- Packs: `packs/events-email/pack.yaml`.
+- Flows: `packs/events-email/flows/in_default.ygtc`, `packs/events-email/flows/out_default.ygtc`.

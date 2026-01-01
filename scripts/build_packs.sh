@@ -2,10 +2,10 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DIST_DIR="${ROOT_DIR}/dist/packs"
+DIST_DIR="${ROOT_DIR}/dist"
 PACKC_INSTALL_CMD=${PACKC_INSTALL_CMD:-cargo install packc --locked}
 
-PACKC_BIN="$(command -v packc || true)"
+PACKC_BIN="${PACKC_BIN:-$(command -v packc || true)}"
 if [ -z "${PACKC_BIN}" ]; then
   echo "packc not found. Install with: ${PACKC_INSTALL_CMD}" >&2
   exit 1
@@ -48,33 +48,52 @@ if [ "${PACKC_DEBUG:-0}" != 0 ]; then
   rustup target list --toolchain "${ACTIVE_TOOLCHAIN}" --installed
 fi
 
-rm -rf "${DIST_DIR}"
 mkdir -p "${DIST_DIR}"
+find "${DIST_DIR}" -maxdepth 1 -type f -name 'events-*.gtpack' -delete
+find "${DIST_DIR}" -maxdepth 1 -type f -name 'events-*.cbor' -delete
+find "${DIST_DIR}" -maxdepth 1 -type f -name 'events-*.sbom.json' -delete
+
+PACK_ROOT="${ROOT_DIR}/packs"
+PACK_DIRS=()
+while IFS= read -r dir; do
+  PACK_DIRS+=("${dir}")
+done < <(find "${PACK_ROOT}" -mindepth 1 -maxdepth 1 -type d ! -name components | sort)
+
+if [ "${#PACK_DIRS[@]}" -eq 0 ]; then
+  echo "No packs found under ${PACK_ROOT}" >&2
+  exit 1
+fi
+
 TMP_ROOT="$(mktemp -d)"
 trap 'rm -rf "${TMP_ROOT}"' EXIT
 
-for pack in "${ROOT_DIR}"/packs/events/*.yaml; do
-  name="$(basename "${pack%.*}")"
-  out="${DIST_DIR}/${name}.gtpack"
+for dir in "${PACK_DIRS[@]}"; do
+  manifest="${dir}/pack.yaml"
+  if [ ! -f "${manifest}" ]; then
+    echo "Skipping ${dir} (missing pack.yaml)" >&2
+    continue
+  fi
+
+  name="$(basename "${dir}")"
+  gtpack_out="${DIST_DIR}/${name}.gtpack"
+  manifest_out="${DIST_DIR}/${name}.cbor"
+  sbom_out="${DIST_DIR}/${name}.sbom.json"
+
   work_dir="${TMP_ROOT}/${name}"
   mkdir -p "${work_dir}"
-
-  # copy manifest as pack.yaml and supporting assets
-  cp "${pack}" "${work_dir}/pack.yaml"
-  if [ -d "${ROOT_DIR}/flows" ]; then
-    rsync -a "${ROOT_DIR}/flows" "${work_dir}/"
-  fi
-  if [ -d "${ROOT_DIR}/packs/components" ]; then
-    rsync -a "${ROOT_DIR}/packs/components/" "${work_dir}/components/"
+  rsync -a "${dir}/" "${work_dir}/"
+  rm -rf "${work_dir}/components"
+  if [ -d "${PACK_ROOT}/components" ]; then
+    rsync -a "${PACK_ROOT}/components/" "${work_dir}/components/"
   fi
 
-  echo "Building pack: ${pack} -> ${out}"
+  echo "Building pack: ${name}"
   "${PACKC_BIN}" build \
     --log warn \
     --in "${work_dir}" \
-    --gtpack-out "${out}" \
-    --manifest "${DIST_DIR}/${name}.cbor" \
-    --sbom "${DIST_DIR}/${name}.sbom.json"
+    --gtpack-out "${gtpack_out}" \
+    --manifest "${manifest_out}" \
+    --sbom "${sbom_out}"
 done
 
 echo "Pack artifacts created under ${DIST_DIR}"

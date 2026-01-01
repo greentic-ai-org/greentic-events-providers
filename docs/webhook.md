@@ -8,4 +8,4 @@ Purpose: generic HTTP ingestion and outgoing POST delivery.
 - Secrets: signing keys declared as `secret_requirements` (`WEBHOOK_SIGNING_SECRET`), resolved via `greentic:secrets-store@1.0.0`; no env-based fallback.
 - Secrets events: metadata-only payloads on `greentic.secrets.*` topics describe put/delete/rotate and `greentic.secrets.missing.detected` when validation keys are absent.
 - Packs: `packs/events/webhook.yaml`.
-- Flows: `flows/events/webhook/in_default.ygtc`, `flows/events/webhook/in_custom_template.ygtc`.
+- Flows: `packs/events-webhook/flows/in_default.ygtc`, `packs/events-webhook/flows/in_custom_template.ygtc`.

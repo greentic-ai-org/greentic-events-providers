@@ -66,11 +66,11 @@ components:
     wasm: components/stub.wasm
 flows:
   - id: sms-in-default
-    file: flows/events/sms/in_default.ygtc
+    file: flows/in_default.ygtc
     entrypoints:
       - sms-in-default
   - id: sms-out-default
-    file: flows/events/sms/out_default.ygtc
+    file: flows/out_default.ygtc
     entrypoints:
       - sms-out-default
 events:

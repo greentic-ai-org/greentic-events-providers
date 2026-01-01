@@ -71,7 +71,8 @@ struct SecretRequirement {
 
 #[test]
 fn webhook_pack_parses_and_references_flows() {
-    let raw = fs::read_to_string(Path::new("../../packs/events/webhook.yaml")).unwrap();
+    let pack_root = Path::new("../../packs/events-webhook");
+    let raw = fs::read_to_string(pack_root.join("pack.yaml")).unwrap();
     let pack: Pack = serde_yaml_bw::from_str(&raw).unwrap();
     assert_eq!(pack.pack_id, "greentic.events.webhook");
     assert!(!pack.events.providers.is_empty());
@@ -101,10 +102,10 @@ fn webhook_pack_parses_and_references_flows() {
     for provider in pack.events.providers {
         assert_eq!(provider.component, "events-webhook-source@1.0.0");
         if let Some(flow) = provider.default_flow {
-            assert!(Path::new("../../").join(&flow).exists());
+            assert!(pack_root.join(&flow).exists());
         }
         if let Some(flow) = provider.custom_flow {
-            assert!(Path::new("../../").join(&flow).exists());
+            assert!(pack_root.join(&flow).exists());
         }
         assert_eq!(provider.capabilities.transport, "webhook");
         assert!(!provider.capabilities.topics.is_empty());

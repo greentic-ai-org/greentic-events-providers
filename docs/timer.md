@@ -7,4 +7,4 @@ Purpose: cron/interval-based event source.
 - Behaviour: host/deployer handles actual scheduling and calls into the component with a schedule name; component emits `EventEnvelope`.
 - Topics: `timer.<name>` (e.g., `timer.daily.summary`).
 - Packs: `packs/events/timer.yaml`.
-- Flows: `flows/events/timer/default.ygtc`.
+- Flows: `packs/events-timer/flows/default.ygtc`.
