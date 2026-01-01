@@ -20,7 +20,8 @@ determine_version() {
     return
   fi
 
-  python3 - <<'PY' 2>/dev/null || true
+  version_from_python="$(
+    python3 - <<'PY' 2>/dev/null || true
 import importlib
 import pathlib
 
@@ -36,6 +37,25 @@ root = pathlib.Path(__file__).resolve().parent.parent
 data = toml.loads((root / "Cargo.toml").read_text())
 print(data.get("workspace", {}).get("package", {}).get("version", ""))
 PY
+  )"
+  if [ -n "${version_from_python}" ]; then
+    echo "${version_from_python}"
+    return
+  fi
+
+  version_from_awk="$(awk '
+    $0 ~ /^\[workspace\.package\]/ { in_section=1; next }
+    in_section && $0 ~ /^\[/ { in_section=0 }
+    in_section && $1 ~ /^version/ {
+      gsub(/"/, "", $3);
+      print $3;
+      exit
+    }
+  ' "${ROOT_DIR}/Cargo.toml")"
+  if [ -n "${version_from_awk}" ]; then
+    echo "${version_from_awk}"
+    return
+  fi
 }
 
 VERSION_RESOLVED="$(determine_version)"
@@ -61,12 +81,15 @@ for pack in "${PACKS[@]}"; do
   ref="${REGISTRY}/${OWNER}/${REPO}/${pack_name}:${VERSION_RESOLVED}"
 
   echo "Pushing ${pack_name} -> ${ref}"
-  oras push "${ref}" \
-    "${pack}:application/vnd.greentic.gtpack+zip" \
+  (
+    cd "${DIST_DIR}"
+    oras push "${ref}" \
+    "$(basename "${pack}"):application/vnd.greentic.gtpack+zip" \
     --annotation org.opencontainers.image.source="${SOURCE_ANNOTATION}" \
     --annotation org.opencontainers.image.revision="${GITHUB_SHA}" \
     --annotation org.opencontainers.image.version="${VERSION_RESOLVED}" \
     --annotation org.opencontainers.image.title="${pack_name}"
+  )
 
   digest=""
   if command -v jq >/dev/null 2>&1 && oras manifest fetch --help 2>&1 | grep -q -- "--descriptor"; then
