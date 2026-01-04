@@ -190,11 +190,13 @@ static LAST_PUBLISHED: OnceLock<Mutex<Option<Vec<u8>>>> = OnceLock::new();
 #[cfg(test)]
 mod tests {
     use super::*;
-    use greentic_types::decode_pack_manifest;
+    use greentic_types::{PROVIDER_EXTENSION_ID, decode_pack_manifest};
     use serde_json::json;
-    use std::fs;
+    use std::fs::{self, File};
+    use std::io::Read;
     use std::path::Path;
     use std::process::Command;
+    use zip::ZipArchive;
 
     #[test]
     fn receipt_is_deterministic() {
@@ -272,39 +274,54 @@ mod tests {
         assert_eq!(manifest.pack_id.as_str(), "greentic.events.provider.dummy");
         assert_eq!(manifest.components.len(), 1);
 
-        let ext = manifest
+        let ext_entry = manifest
             .extensions
             .as_ref()
-            .and_then(|exts| exts.get("greentic.ext.provider"))
-            .and_then(|ext| ext.inline.as_ref())
-            .cloned()
-            .expect("provider extension inline payload");
-        let providers = ext
-            .get("providers")
-            .and_then(|v| v.as_array())
-            .expect("providers array");
-        let entry = providers.first().expect("at least one provider");
+            .and_then(|exts| exts.get(PROVIDER_EXTENSION_ID))
+            .expect("provider extension present");
         assert_eq!(
-            entry
-                .get("provider_type")
-                .and_then(|v| v.as_str())
-                .unwrap_or(""),
-            "events.dummy"
+            ext_entry.kind.as_str(),
+            PROVIDER_EXTENSION_ID,
+            "provider extension kind should match canonical ID"
+        );
+        let inline = manifest
+            .provider_extension_inline()
+            .expect("provider extension inline payload");
+        let entry = inline.providers.first().expect("at least one provider");
+        assert_eq!(entry.provider_type, "events.dummy");
+        assert!(
+            !entry.ops.is_empty(),
+            "provider entry should expose at least one op"
+        );
+        assert_eq!(entry.runtime.world, "greentic:provider/schema-core@1.0.0");
+
+        let file = File::open(&gtpack_out).expect("open gtpack");
+        let mut archive = ZipArchive::new(file).expect("parse gtpack zip archive");
+        let mut manifest_entry = archive
+            .by_name("manifest.cbor")
+            .expect("manifest.cbor inside gtpack");
+        let mut zipped_manifest = Vec::new();
+        manifest_entry
+            .read_to_end(&mut zipped_manifest)
+            .expect("read manifest from gtpack");
+        let gtpack_manifest =
+            decode_pack_manifest(&zipped_manifest).expect("decode gtpack manifest");
+        let gtpack_ext_entry = gtpack_manifest
+            .extensions
+            .as_ref()
+            .and_then(|exts| exts.get(PROVIDER_EXTENSION_ID))
+            .expect("gtpack manifest includes provider extension");
+        assert_eq!(
+            gtpack_ext_entry.kind.as_str(),
+            PROVIDER_EXTENSION_ID,
+            "gtpack provider extension kind should match canonical ID"
         );
         assert!(
-            entry
-                .get("ops")
-                .and_then(|v| v.as_array())
-                .map(|ops| !ops.is_empty())
-                .unwrap_or(false)
-        );
-        assert_eq!(
-            entry
-                .get("runtime")
-                .and_then(|v| v.get("world"))
-                .and_then(|v| v.as_str())
-                .unwrap_or(""),
-            "greentic:provider/schema-core@1.0.0"
+            gtpack_manifest
+                .provider_extension_inline()
+                .and_then(|inline| inline.providers.first())
+                .is_some(),
+            "gtpack manifest should embed provider declarations inline"
         );
     }
 }

@@ -25,8 +25,8 @@ components:
     config_schema: schemas/events/timer/config.schema.json
     wasm: components/events-provider-timer.wasm
 extensions:
-  greentic.ext.provider:
-    kind: greentic.ext.provider
+  greentic.provider-extension.v1:
+    kind: greentic.provider-extension.v1
     version: "1.0.0"
     inline:
       providers:

@@ -20,4 +20,5 @@ uuid.workspace = true
 
 [dev-dependencies]
 greentic-types.workspace = true
+zip = { version = "0.6", default-features = false, features = ["deflate"] }
 tempfile = "3"

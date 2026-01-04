@@ -23,8 +23,8 @@ components:
     config_schema: schemas/events/dummy/config.schema.json
     wasm: components/events-provider-dummy.wasm
 extensions:
-  greentic.ext.provider:
-    kind: greentic.ext.provider
+  greentic.provider-extension.v1:
+    kind: greentic.provider-extension.v1
     version: "1.0.0"
     inline:
       providers:

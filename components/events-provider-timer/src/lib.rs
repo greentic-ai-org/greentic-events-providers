@@ -223,7 +223,7 @@ static HOST_STATE: OnceLock<Mutex<BTreeMap<String, Vec<u8>>>> = OnceLock::new();
 #[cfg(test)]
 mod tests {
     use super::*;
-    use greentic_types::decode_pack_manifest;
+    use greentic_types::{PROVIDER_EXTENSION_ID, decode_pack_manifest};
     use serde_json::json;
     use std::fs;
     use std::path::Path;
@@ -293,21 +293,20 @@ mod tests {
         let manifest_bytes = fs::read(&manifest_out).expect("manifest bytes");
         let manifest = decode_pack_manifest(&manifest_bytes).expect("decode manifest");
         assert_eq!(manifest.pack_id.as_str(), "greentic.events.provider.timer");
-        let ext = manifest
+        let ext_entry = manifest
             .extensions
             .as_ref()
-            .and_then(|exts| exts.get("greentic.ext.provider"))
-            .and_then(|ext| ext.inline.as_ref())
-            .cloned()
-            .expect("provider extension inline payload");
-        let providers = ext
-            .get("providers")
-            .and_then(|v| v.as_array())
-            .expect("providers array");
-        let entry = providers.first().expect("provider present");
+            .and_then(|exts| exts.get(PROVIDER_EXTENSION_ID))
+            .expect("provider extension present");
         assert_eq!(
-            entry.get("provider_type").and_then(|v| v.as_str()),
-            Some("events.timer")
+            ext_entry.kind.as_str(),
+            PROVIDER_EXTENSION_ID,
+            "provider extension kind should match canonical ID"
         );
+        let inline = manifest
+            .provider_extension_inline()
+            .expect("provider extension inline payload");
+        let entry = inline.providers.first().expect("provider present");
+        assert_eq!(entry.provider_type, "events.timer");
     }
 }
