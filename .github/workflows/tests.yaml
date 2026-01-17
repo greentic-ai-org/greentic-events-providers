@@ -31,7 +31,7 @@ jobs:
       - name: Install greentic-pack (skip if cached)
         run: |
           if ! command -v greentic-pack >/dev/null 2>&1 || [[ "$(greentic-pack --version)" != greentic-pack\ ${PACK_VERSION}* ]]; then
-            cargo install greentic-pack --force
+            cargo binstall greentic-pack --force -y
           fi
       - name: Local check (fmt + clippy + test + packs)
         run: PACK_DEBUG=1 ci/local_check.sh

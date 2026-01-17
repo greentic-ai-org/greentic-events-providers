@@ -42,7 +42,7 @@ jobs:
       - name: Install greentic-pack (skip if cached)
         run: |
           if ! command -v greentic-pack >/dev/null 2>&1 || [[ "$(greentic-pack --version)" != greentic-pack\ ${PACK_VERSION}* ]]; then
-            cargo install greentic-pack --force --locked
+            cargo binstall greentic-pack --force --locked -y
           fi
 
       - name: Build pack artifacts

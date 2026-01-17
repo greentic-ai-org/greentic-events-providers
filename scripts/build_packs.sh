@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST_DIR="${ROOT_DIR}/dist"
-PACK_INSTALL_CMD=${PACK_INSTALL_CMD:-cargo install greentic-pack --locked}
+PACK_INSTALL_CMD=${PACK_INSTALL_CMD:-cargo binstall greentic-pack --locked}
 
 PACK_BIN="${PACK_BIN:-$(command -v greentic-pack || true)}"
 if [ -z "${PACK_BIN}" ]; then
