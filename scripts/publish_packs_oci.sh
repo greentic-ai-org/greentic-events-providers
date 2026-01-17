@@ -117,6 +117,7 @@ for pack in "${PACKS[@]}"; do
     else
       visibility_url="https://api.github.com/${VISIBILITY_ENDPOINT}/${OWNER}/packages/container/${encoded_package}/visibility"
     fi
+    echo "Visibility URL: ${visibility_url}"
     curl -fsS -X PATCH \
       -H "Authorization: Bearer ${GHCR_TOKEN}" \
       -H "Accept: application/vnd.github+json" \
