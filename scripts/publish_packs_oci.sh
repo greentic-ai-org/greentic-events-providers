@@ -112,6 +112,32 @@ for pack in "${PACKS[@]}"; do
   if [ "${MAKE_PUBLIC}" = "true" ] && [ -n "${GHCR_TOKEN}" ]; then
     encoded_package="${REPO}%2F${pack_name}"
     echo "Setting visibility public for ${OWNER}/${encoded_package}"
+    whoami_tmp="$(mktemp)"
+    whoami_code="$(
+      curl -sS -o "${whoami_tmp}" -w "%{http_code}" \
+        -H "Authorization: Bearer ${GHCR_TOKEN}" \
+        -H "Accept: application/vnd.github+json" \
+        "https://api.github.com/user" || true
+    )"
+    if [ "${whoami_code}" = "200" ]; then
+      whoami_login="$(python3 - <<'PY'
+import json
+import sys
+
+path = sys.argv[1]
+data = json.load(open(path, "r", encoding="utf-8"))
+login = data.get("login", "")
+uid = data.get("id", "")
+print(f"Token identity: {login} (id={uid})")
+PY
+      "${whoami_tmp}" 2>/dev/null || true)"
+      if [ -n "${whoami_login}" ]; then
+        echo "${whoami_login}"
+      fi
+    else
+      echo "Token identity check failed with status ${whoami_code}" >&2
+    fi
+    rm -f "${whoami_tmp}"
     if [ "${VISIBILITY_ENDPOINT}" = "user" ]; then
       visibility_url="https://api.github.com/user/packages/container/${encoded_package}/visibility"
     else
