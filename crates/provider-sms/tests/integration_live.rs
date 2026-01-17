@@ -6,6 +6,11 @@ use std::collections::BTreeMap;
 use std::env;
 use std::error::Error;
 
+const LIVE_HTTP_DISABLED_API: &str =
+    "RUN_LIVE_HTTP set but live-http feature is disabled; skipping Twilio API call.";
+const LIVE_HTTP_DISABLED_SMS: &str =
+    "RUN_LIVE_HTTP set but live-http feature is disabled; skipping Twilio SMS send.";
+
 fn should_run() -> bool {
     matches!(env::var("RUN_LIVE_TESTS"), Ok(val) if val == "true")
 }
@@ -80,9 +85,7 @@ fn live_twilio_inbound_smoke() -> Result<(), Box<dyn Error>> {
         }
         #[cfg(not(feature = "live-http"))]
         {
-            eprintln!(
-                "RUN_LIVE_HTTP set but live-http feature is disabled; skipping Twilio API call."
-            );
+            eprintln!("{LIVE_HTTP_DISABLED_API}");
         }
     } else {
         eprintln!("RUN_LIVE_HTTP not set; skipping Twilio API call.");
@@ -173,9 +176,7 @@ fn live_twilio_outbound_smoke() -> Result<(), Box<dyn Error>> {
         }
         #[cfg(not(feature = "live-http"))]
         {
-            eprintln!(
-                "RUN_LIVE_HTTP set but live-http feature is disabled; skipping Twilio SMS send."
-            );
+            eprintln!("{LIVE_HTTP_DISABLED_SMS}");
         }
     } else {
         eprintln!("RUN_LIVE_HTTP not set; skipping Twilio SMS send.");
