@@ -80,7 +80,9 @@ fn live_twilio_inbound_smoke() -> Result<(), Box<dyn Error>> {
         }
         #[cfg(not(feature = "live-http"))]
         {
-            eprintln!("RUN_LIVE_HTTP set but live-http feature is disabled; skipping Twilio API call.");
+            eprintln!(
+                "RUN_LIVE_HTTP set but live-http feature is disabled; skipping Twilio API call."
+            );
         }
     } else {
         eprintln!("RUN_LIVE_HTTP not set; skipping Twilio API call.");
@@ -171,7 +173,9 @@ fn live_twilio_outbound_smoke() -> Result<(), Box<dyn Error>> {
         }
         #[cfg(not(feature = "live-http"))]
         {
-            eprintln!("RUN_LIVE_HTTP set but live-http feature is disabled; skipping Twilio SMS send.");
+            eprintln!(
+                "RUN_LIVE_HTTP set but live-http feature is disabled; skipping Twilio SMS send."
+            );
         }
     } else {
         eprintln!("RUN_LIVE_HTTP not set; skipping Twilio SMS send.");
