@@ -10,7 +10,6 @@ SOURCE_ANNOTATION="https://github.com/greentic-ai/greentic-events-providers"
 GITHUB_SHA="${GITHUB_SHA:-$(git -C "${ROOT_DIR}" rev-parse --verify HEAD)}"
 MAKE_PUBLIC="${MAKE_PUBLIC:-false}"
 GHCR_TOKEN="${GHCR_TOKEN:-${GITHUB_TOKEN:-}}"
-VISIBILITY_ENDPOINT="${VISIBILITY_ENDPOINT:-user}"
 
 determine_version() {
   if [ -n "${VERSION:-}" ]; then
@@ -110,54 +109,31 @@ for pack in "${PACKS[@]}"; do
   fi
 
   if [ "${MAKE_PUBLIC}" = "true" ] && [ -n "${GHCR_TOKEN}" ]; then
-    encoded_package="${REPO}%2F${pack_name}"
-    echo "Setting visibility public for ${OWNER}/${encoded_package}"
-    whoami_tmp="$(mktemp)"
-    whoami_code="$(
-      curl -sS -o "${whoami_tmp}" -w "%{http_code}" \
+    PKG="${REPO}/${pack_name}"
+    PKG_ENC="$(
+      PKG="${PKG}" python3 - <<'PY' 2>/dev/null || true
+import os
+import urllib.parse
+
+print(urllib.parse.quote(os.environ["PKG"], safe=""))
+PY
+    )"
+    if [ -n "${PKG_ENC}" ]; then
+      VIS_URL="https://api.github.com/user/packages/container/${PKG_ENC}/visibility"
+      echo "Setting visibility public for ${OWNER}/${PKG_ENC}"
+      echo "Visibility URL: ${VIS_URL}"
+      if ! curl -sS -X PATCH \
         -H "Authorization: Bearer ${GHCR_TOKEN}" \
         -H "Accept: application/vnd.github+json" \
-        "https://api.github.com/user" || true
-    )"
-    if [ "${whoami_code}" = "200" ]; then
-      whoami_login="$(python3 - <<'PY'
-import json
-import sys
-
-path = sys.argv[1]
-data = json.load(open(path, "r", encoding="utf-8"))
-login = data.get("login", "")
-uid = data.get("id", "")
-print(f"Token identity: {login} (id={uid})")
-PY
-      "${whoami_tmp}" 2>/dev/null || true)"
-      if [ -n "${whoami_login}" ]; then
-        echo "${whoami_login}"
+        -H "Content-Type: application/json" \
+        "${VIS_URL}" \
+        -d '{"visibility":"public"}'; then
+        echo "Visibility update failed (non-fatal)." >&2
+      else
+        echo
       fi
     else
-      echo "Token identity check failed with status ${whoami_code}" >&2
+      echo "Visibility update skipped (failed to encode package name)." >&2
     fi
-    rm -f "${whoami_tmp}"
-    if [ "${VISIBILITY_ENDPOINT}" = "user" ]; then
-      visibility_url="https://api.github.com/user/packages/container/${encoded_package}/visibility"
-    else
-      visibility_url="https://api.github.com/${VISIBILITY_ENDPOINT}/${OWNER}/packages/container/${encoded_package}/visibility"
-    fi
-    echo "Visibility URL: ${visibility_url}"
-    response_tmp="$(mktemp)"
-    http_code="$(
-      curl -sS -o "${response_tmp}" -w "%{http_code}" -X PATCH \
-        -H "Authorization: Bearer ${GHCR_TOKEN}" \
-        -H "Accept: application/vnd.github+json" \
-        "${visibility_url}" \
-        -d '{"visibility":"public"}' || true
-    )"
-    if [ "${http_code}" != "200" ]; then
-      echo "Visibility update failed with status ${http_code} for ${visibility_url}" >&2
-      cat "${response_tmp}" >&2
-      rm -f "${response_tmp}"
-      exit 1
-    fi
-    rm -f "${response_tmp}"
   fi
 done
