@@ -63,4 +63,9 @@ jobs:
           toolchain: 1.89.0
           override: true
       - name: Run live tests (skips internally if secrets missing)
-        run: cargo test --workspace --tests
+        run: |
+          features=""
+          if [ "${RUN_LIVE_HTTP}" = "true" ]; then
+            features="--features live-http"
+          fi
+          cargo test --workspace --tests ${features}

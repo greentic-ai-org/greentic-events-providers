@@ -60,20 +60,27 @@ fn live_twilio_inbound_smoke() -> Result<(), Box<dyn Error>> {
     };
 
     if should_call_network() {
-        let client = reqwest::blocking::Client::new();
-        let url = format!(
-            "https://api.twilio.com/2010-04-01/Accounts/{}.json",
-            vars["TWILIO_ACCOUNT_SID"]
-        );
-        let res = client
-            .get(url)
-            .basic_auth(
-                &vars["TWILIO_ACCOUNT_SID"],
-                Some(&vars["TWILIO_AUTH_TOKEN"]),
-            )
-            .send()?;
-        if !res.status().is_success() {
-            return Err(format!("Twilio account check failed: {}", res.status()).into());
+        #[cfg(feature = "live-http")]
+        {
+            let client = reqwest::blocking::Client::new();
+            let url = format!(
+                "https://api.twilio.com/2010-04-01/Accounts/{}.json",
+                vars["TWILIO_ACCOUNT_SID"]
+            );
+            let res = client
+                .get(url)
+                .basic_auth(
+                    &vars["TWILIO_ACCOUNT_SID"],
+                    Some(&vars["TWILIO_AUTH_TOKEN"]),
+                )
+                .send()?;
+            if !res.status().is_success() {
+                return Err(format!("Twilio account check failed: {}", res.status()).into());
+            }
+        }
+        #[cfg(not(feature = "live-http"))]
+        {
+            eprintln!("RUN_LIVE_HTTP set but live-http feature is disabled; skipping Twilio API call.");
         }
     } else {
         eprintln!("RUN_LIVE_HTTP not set; skipping Twilio API call.");
@@ -144,20 +151,27 @@ fn live_twilio_outbound_smoke() -> Result<(), Box<dyn Error>> {
     assert!(req.url.contains(&cfg.account_sid));
 
     if should_call_network() {
-        let url = reqwest::Url::parse(&req.url)?;
-        if url.scheme() != "https" {
-            return Err(format!("Refusing to send over non-HTTPS URL: {}", url).into());
+        #[cfg(feature = "live-http")]
+        {
+            let url = reqwest::Url::parse(&req.url)?;
+            if url.scheme() != "https" {
+                return Err(format!("Refusing to send over non-HTTPS URL: {}", url).into());
+            }
+            let client = reqwest::blocking::Client::builder()
+                .https_only(true)
+                .build()?;
+            let res = client
+                .post(url)
+                .basic_auth(&cfg.account_sid, Some(&vars["TWILIO_AUTH_TOKEN"]))
+                .form(&req.body)
+                .send()?;
+            if !res.status().is_success() {
+                return Err(format!("Twilio send failed: {}", res.status()).into());
+            }
         }
-        let client = reqwest::blocking::Client::builder()
-            .https_only(true)
-            .build()?;
-        let res = client
-            .post(url)
-            .basic_auth(&cfg.account_sid, Some(&vars["TWILIO_AUTH_TOKEN"]))
-            .form(&req.body)
-            .send()?;
-        if !res.status().is_success() {
-            return Err(format!("Twilio send failed: {}", res.status()).into());
+        #[cfg(not(feature = "live-http"))]
+        {
+            eprintln!("RUN_LIVE_HTTP set but live-http feature is disabled; skipping Twilio SMS send.");
         }
     } else {
         eprintln!("RUN_LIVE_HTTP not set; skipping Twilio SMS send.");

@@ -9,7 +9,8 @@ REPO="${REPO:-greentic-packs}"
 SOURCE_ANNOTATION="https://github.com/greentic-ai/greentic-events-providers"
 GITHUB_SHA="${GITHUB_SHA:-$(git -C "${ROOT_DIR}" rev-parse --verify HEAD)}"
 MAKE_PUBLIC="${MAKE_PUBLIC:-false}"
-GITHUB_TOKEN="${GITHUB_TOKEN:-}"
+GHCR_TOKEN="${GHCR_TOKEN:-${GITHUB_TOKEN:-}}"
+VISIBILITY_ENDPOINT="${VISIBILITY_ENDPOINT:-user}"
 
 determine_version() {
   if [ -n "${VERSION:-}" ]; then
@@ -108,13 +109,18 @@ for pack in "${PACKS[@]}"; do
     echo "Digest for ${ref}: (unavailable - oras digest lookup failed)" >&2
   fi
 
-  if [ "${MAKE_PUBLIC}" = "true" ] && [ -n "${GITHUB_TOKEN}" ]; then
+  if [ "${MAKE_PUBLIC}" = "true" ] && [ -n "${GHCR_TOKEN}" ]; then
     encoded_package="${REPO}%2F${pack_name}"
     echo "Setting visibility public for ${OWNER}/${encoded_package}"
+    if [ "${VISIBILITY_ENDPOINT}" = "user" ]; then
+      visibility_url="https://api.github.com/user/packages/container/${encoded_package}/visibility"
+    else
+      visibility_url="https://api.github.com/${VISIBILITY_ENDPOINT}/${OWNER}/packages/container/${encoded_package}/visibility"
+    fi
     curl -fsS -X PATCH \
-      -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+      -H "Authorization: Bearer ${GHCR_TOKEN}" \
       -H "Accept: application/vnd.github+json" \
-      "https://api.github.com/users/${OWNER}/packages/container/${encoded_package}/visibility" \
+      "${visibility_url}" \
       -d '{"visibility":"public"}' >/dev/null
   fi
 done

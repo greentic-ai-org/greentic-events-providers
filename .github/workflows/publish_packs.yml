@@ -62,7 +62,7 @@ jobs:
 
       - name: Login to GHCR
         env:
-          CR_PAT: ${{ secrets.GITHUB_TOKEN }}
+          CR_PAT: ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           echo "${CR_PAT}" | oras login ghcr.io -u "${{ github.actor }}" --password-stdin
 
@@ -74,5 +74,6 @@ jobs:
           REPO: ${{ env.REPO }}
           GITHUB_SHA: ${{ github.sha }}
           MAKE_PUBLIC: "true"
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
+          VISIBILITY_ENDPOINT: "user"
         run: bash scripts/publish_packs_oci.sh
