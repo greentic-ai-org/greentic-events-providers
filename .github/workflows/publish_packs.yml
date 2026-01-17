@@ -29,6 +29,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Cache cargo bin
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin
+          key: ${{ runner.os }}-cargo-bin-${{ env.RUSTUP_TOOLCHAIN }}-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
@@ -38,6 +43,11 @@ jobs:
 
       - name: Install wasm32-wasip2 target
         run: rustup target add wasm32-wasip2 --toolchain "${RUSTUP_TOOLCHAIN}"
+      - name: Install cargo-binstall (skip if cached)
+        run: |
+          if ! command -v cargo-binstall >/dev/null 2>&1; then
+            cargo install cargo-binstall --force --locked
+          fi
 
       - name: Install greentic-pack (skip if cached)
         run: |
