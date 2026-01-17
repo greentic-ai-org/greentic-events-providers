@@ -11,6 +11,25 @@ const LIVE_HTTP_DISABLED_API: &str =
 const LIVE_HTTP_DISABLED_SMS: &str =
     "RUN_LIVE_HTTP set but live-http feature is disabled; skipping Twilio SMS send.";
 
+#[cfg(feature = "live-http")]
+#[derive(Clone, Debug)]
+struct HttpsUrl(reqwest::Url);
+
+#[cfg(feature = "live-http")]
+impl HttpsUrl {
+    fn parse(raw: &str) -> Result<Self, Box<dyn Error>> {
+        let url = reqwest::Url::parse(raw)?;
+        if url.scheme() != "https" {
+            return Err(format!("Refusing non-HTTPS URL: {}", url).into());
+        }
+        Ok(Self(url))
+    }
+
+    fn into_url(self) -> reqwest::Url {
+        self.0
+    }
+}
+
 fn should_run() -> bool {
     matches!(env::var("RUN_LIVE_TESTS"), Ok(val) if val == "true")
 }
@@ -158,13 +177,7 @@ fn live_twilio_outbound_smoke() -> Result<(), Box<dyn Error>> {
     if should_call_network() {
         #[cfg(feature = "live-http")]
         {
-            if !req.url.starts_with("https://") {
-                return Err(format!("Refusing to send over non-HTTPS URL: {}", req.url).into());
-            }
-            let url = reqwest::Url::parse(&req.url)?;
-            if url.scheme() != "https" {
-                return Err(format!("Refusing to send over non-HTTPS URL: {}", url).into());
-            }
+            let url = HttpsUrl::parse(&req.url)?.into_url();
             let client = reqwest::blocking::Client::builder()
                 .https_only(true)
                 .build()?;
