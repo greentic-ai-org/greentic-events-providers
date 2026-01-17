@@ -302,8 +302,9 @@ mod tests {
         let manifest_out = temp.path().join("manifest.cbor");
         let gtpack_out = temp.path().join("pack.gtpack");
 
-        let status = Command::new("packc")
+        let status = Command::new("greentic-pack")
             .arg("build")
+            .arg("--no-update")
             .arg("--in")
             .arg(&pack_root)
             .arg("--manifest")
@@ -315,9 +316,9 @@ mod tests {
 
         match status {
             Ok(exit) if exit.success() => {}
-            Ok(exit) => panic!("packc exited with {}", exit),
+            Ok(exit) => panic!("greentic-pack exited with {}", exit),
             Err(err) => {
-                eprintln!("packc not available: {err}");
+                eprintln!("greentic-pack not available: {err}");
                 return;
             }
         }

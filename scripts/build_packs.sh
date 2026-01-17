@@ -3,26 +3,26 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST_DIR="${ROOT_DIR}/dist"
-PACKC_INSTALL_CMD=${PACKC_INSTALL_CMD:-cargo install packc --locked}
+PACK_INSTALL_CMD=${PACK_INSTALL_CMD:-cargo install greentic-pack --locked}
 
-PACKC_BIN="${PACKC_BIN:-$(command -v packc || true)}"
-if [ -z "${PACKC_BIN}" ]; then
-  echo "packc not found. Install with: ${PACKC_INSTALL_CMD}" >&2
+PACK_BIN="${PACK_BIN:-$(command -v greentic-pack || true)}"
+if [ -z "${PACK_BIN}" ]; then
+  echo "greentic-pack not found. Install with: ${PACK_INSTALL_CMD}" >&2
   exit 1
 fi
 
-INSTALLED_PACKC_VERSION="$(${PACKC_BIN} --version | awk '{print $2}')"
+INSTALLED_PACK_VERSION="$(${PACK_BIN} --version | awk '{print $2}')"
 
-# Optional: allow callers to enforce a major.minor series (e.g., PACKC_SERIES=0.4.)
-if [ -n "${PACKC_SERIES:-}" ]; then
-  if [[ "${INSTALLED_PACKC_VERSION}" != "${PACKC_SERIES}"* ]]; then
-    echo "packc ${PACKC_SERIES%?} required (found ${INSTALLED_PACKC_VERSION}). Install with: ${PACKC_INSTALL_CMD}" >&2
+# Optional: allow callers to enforce a major.minor series (e.g., PACK_SERIES=0.4.)
+if [ -n "${PACK_SERIES:-}" ]; then
+  if [[ "${INSTALLED_PACK_VERSION}" != "${PACK_SERIES}"* ]]; then
+    echo "greentic-pack ${PACK_SERIES%?} required (found ${INSTALLED_PACK_VERSION}). Install with: ${PACK_INSTALL_CMD}" >&2
     exit 1
   fi
 fi
 
 # Ensure wasm32-wasip2 target is available for the active toolchain, even though
-# packc builds happen in a temp dir outside this repo (and thus outside the
+# greentic-pack builds happen in a temp dir outside this repo (and thus outside the
 # rust-toolchain override).
 ACTIVE_TOOLCHAIN="${RUSTUP_TOOLCHAIN:-$(rustup show active-toolchain 2>/dev/null | cut -d' ' -f1)}"
 if [ -z "${ACTIVE_TOOLCHAIN}" ]; then
@@ -35,13 +35,13 @@ if ! rustup target list --toolchain "${ACTIVE_TOOLCHAIN}" --installed | grep -q 
   exit 1
 fi
 
-# Force packc/cargo invocations (in /tmp) to use the same toolchain.
+# Force greentic-pack/cargo invocations (in /tmp) to use the same toolchain.
 export RUSTUP_TOOLCHAIN="${ACTIVE_TOOLCHAIN}"
 
-export PACKC_LOG=warn
+export GREENTIC_PACK_LOG=warn
 export CARGO_TERM_PROGRESS_WHEN=never
 
-if [ "${PACKC_DEBUG:-0}" != 0 ]; then
+if [ "${PACK_DEBUG:-0}" != 0 ]; then
   echo "Using toolchain: ${ACTIVE_TOOLCHAIN}"
   rustc +"${ACTIVE_TOOLCHAIN}" --version
   echo "Installed targets for ${ACTIVE_TOOLCHAIN}:"
@@ -88,7 +88,7 @@ for dir in "${PACK_DIRS[@]}"; do
   fi
 
   echo "Building pack: ${name}"
-  "${PACKC_BIN}" build \
+  "${PACK_BIN}" build \
     --log warn \
     --in "${work_dir}" \
     --gtpack-out "${gtpack_out}" \

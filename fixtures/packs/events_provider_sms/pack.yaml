@@ -2,47 +2,45 @@ pack_id: greentic.events.provider.sms
 version: 0.1.0
 kind: application
 publisher: greentic
-name: greentic.events.provider.sms
-description: Provider-core SMS events adapter that queues send requests in state-store
-authors:
-  - Greentic Engineering <engineering@greentic.dev>
-license: MIT
 components:
-  - id: events-provider-sms
-    version: 0.1.0
-    world: greentic:provider/schema-core@1.0.0
-    supports: []
-    profiles:
-      default: stateless
-      supported:
-        - stateless
-    capabilities:
-      wasi:
-        clocks: true
-      host:
-        state:
-          store: true
-    config_schema: schemas/events/sms/config.schema.json
-    wasm: components/events-provider-sms.wasm
+- id: events-provider-sms
+  version: 0.1.0
+  world: greentic:provider/schema-core@1.0.0
+  supports: []
+  profiles:
+    default: stateless
+    supported:
+    - stateless
+  capabilities:
+    wasi:
+      random: false
+      clocks: true
+    host:
+      state:
+        read: false
+        write: false
+  wasm: components/events-provider-sms.wasm
+  config_schema: schemas/events/sms/config.schema.json
+dependencies: []
+flows: []
+assets:
+- path: schemas/events/sms/config.schema.json
+- path: schemas/events/sms/README.md
 extensions:
   greentic.provider-extension.v1:
     kind: greentic.provider-extension.v1
-    version: "1.0.0"
+    version: 1.0.0
     inline:
       providers:
-        - provider_type: "events.sms"
-          capabilities:
-            - publish
-          ops:
-            - publish
-          config_schema_ref: "schemas/events/sms/config.schema.json"
-          state_schema_ref: "schemas/events/sms/README.md"
-          docs_ref: "schemas/events/sms/README.md"
-          runtime:
-            component_ref: "events-provider-sms"
-            export: "schema-core"
-            world: "greentic:provider/schema-core@1.0.0"
-flows: []
-assets:
-  - path: schemas/events/sms/config.schema.json
-  - path: schemas/events/sms/README.md
+      - provider_type: events.sms
+        capabilities:
+        - publish
+        ops:
+        - publish
+        config_schema_ref: schemas/events/sms/config.schema.json
+        state_schema_ref: schemas/events/sms/README.md
+        runtime:
+          component_ref: events-provider-sms
+          export: schema-core
+          world: greentic:provider/schema-core@1.0.0
+        docs_ref: schemas/events/sms/README.md

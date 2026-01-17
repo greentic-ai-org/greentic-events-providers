@@ -2,47 +2,45 @@ pack_id: greentic.events.provider.timer
 version: 0.1.0
 kind: application
 publisher: greentic
-name: greentic.events.provider.timer
-description: Provider-core timer publisher fixture that queues schedules in state-store
-authors:
-  - Greentic Engineering <engineering@greentic.dev>
-license: MIT
 components:
-  - id: events-provider-timer
-    version: 0.1.0
-    world: greentic:provider/schema-core@1.0.0
-    supports: []
-    profiles:
-      default: stateless
-      supported:
-        - stateless
-    capabilities:
-      wasi:
-        clocks: true
-      host:
-        state:
-          store: true
-    config_schema: schemas/events/timer/config.schema.json
-    wasm: components/events-provider-timer.wasm
+- id: events-provider-timer
+  version: 0.1.0
+  world: greentic:provider/schema-core@1.0.0
+  supports: []
+  profiles:
+    default: stateless
+    supported:
+    - stateless
+  capabilities:
+    wasi:
+      random: false
+      clocks: true
+    host:
+      state:
+        read: false
+        write: false
+  wasm: components/events-provider-timer.wasm
+  config_schema: schemas/events/timer/config.schema.json
+dependencies: []
+flows: []
+assets:
+- path: schemas/events/timer/config.schema.json
+- path: schemas/events/timer/README.md
 extensions:
   greentic.provider-extension.v1:
     kind: greentic.provider-extension.v1
-    version: "1.0.0"
+    version: 1.0.0
     inline:
       providers:
-        - provider_type: "events.timer"
-          capabilities:
-            - publish
-          ops:
-            - publish
-          config_schema_ref: "schemas/events/timer/config.schema.json"
-          state_schema_ref: "schemas/events/timer/README.md"
-          docs_ref: "schemas/events/timer/README.md"
-          runtime:
-            component_ref: "events-provider-timer"
-            export: "schema-core"
-            world: "greentic:provider/schema-core@1.0.0"
-flows: []
-assets:
-  - path: schemas/events/timer/config.schema.json
-  - path: schemas/events/timer/README.md
+      - provider_type: events.timer
+        capabilities:
+        - publish
+        ops:
+        - publish
+        config_schema_ref: schemas/events/timer/config.schema.json
+        state_schema_ref: schemas/events/timer/README.md
+        runtime:
+          component_ref: events-provider-timer
+          export: schema-core
+          world: greentic:provider/schema-core@1.0.0
+        docs_ref: schemas/events/timer/README.md

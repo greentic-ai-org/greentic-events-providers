@@ -96,8 +96,9 @@ fn fixture_pack_exposes_secret_requirement() {
 
     let temp = tempfile::tempdir().expect("tempdir");
     let manifest_out = temp.path().join("manifest.cbor");
-    let status = Command::new("packc")
+    let status = Command::new("greentic-pack")
         .arg("build")
+        .arg("--no-update")
         .arg("--in")
         .arg(&pack_root)
         .arg("--manifest")
@@ -108,10 +109,10 @@ fn fixture_pack_exposes_secret_requirement() {
     match status {
         Ok(exit) if exit.success() => {}
         Ok(exit) => {
-            panic!("packc exited with {}", exit);
+            panic!("greentic-pack exited with {}", exit);
         }
         Err(err) => {
-            eprintln!("packc not available: {err}");
+            eprintln!("greentic-pack not available: {err}");
             return;
         }
     }

@@ -8,6 +8,8 @@ OWNER="${OWNER:-greentic-ai}"
 REPO="${REPO:-greentic-packs}"
 SOURCE_ANNOTATION="https://github.com/greentic-ai/greentic-events-providers"
 GITHUB_SHA="${GITHUB_SHA:-$(git -C "${ROOT_DIR}" rev-parse --verify HEAD)}"
+MAKE_PUBLIC="${MAKE_PUBLIC:-false}"
+GITHUB_TOKEN="${GITHUB_TOKEN:-}"
 
 determine_version() {
   if [ -n "${VERSION:-}" ]; then
@@ -104,5 +106,15 @@ for pack in "${PACKS[@]}"; do
     echo "Digest for ${ref}: ${digest}"
   else
     echo "Digest for ${ref}: (unavailable - oras digest lookup failed)" >&2
+  fi
+
+  if [ "${MAKE_PUBLIC}" = "true" ] && [ -n "${GITHUB_TOKEN}" ]; then
+    encoded_package="${REPO}%2F${pack_name}"
+    echo "Setting visibility public for ${OWNER}/${encoded_package}"
+    curl -fsS -X PATCH \
+      -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+      -H "Accept: application/vnd.github+json" \
+      "https://api.github.com/users/${OWNER}/packages/container/${encoded_package}/visibility" \
+      -d '{"visibility":"public"}' >/dev/null
   fi
 done

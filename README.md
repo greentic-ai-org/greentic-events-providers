@@ -17,8 +17,8 @@ Reusable Greentic event providers shipped as WASM components plus packs for `gre
 - `docs/` – overview + per-provider notes.
 - `packs/events/` – YAML packs consumed by greentic-events/deployer.
 - `packs/events-*/flows/` – default/custom flow stubs referenced by packs.
-- `scripts/build_packs.sh` – builds validated `*.gtpack` artifacts via `packc` (use `cargo install packc --locked`; optionally set `PACKC_SERIES=0.4.` in CI to enforce a series).
-- `.github/workflows/publish-packs.yaml` – builds `*.gtpack` with `packc` and publishes to GHCR on tags.
+- `scripts/build_packs.sh` – builds validated `*.gtpack` artifacts via `greentic-pack` (use `cargo install greentic-pack --locked`; optionally set `PACK_SERIES=0.4.` in CI to enforce a series).
+- `.github/workflows/publish-packs.yaml` – builds `*.gtpack` with `greentic-pack` and publishes to GHCR on tags.
 - `ci/local_check.sh` – run fmt + clippy + tests + pack build locally (mirrors CI).
 - `.github/workflows/tests.yaml` – CI for fmt/clippy/tests; live tests gated by vars; builds packs.
 - `.github/workflows/publish-latest-packs.yaml` – publishes latest `*.gtpack` artifacts to GHCR on main.
@@ -31,7 +31,7 @@ Reusable Greentic event providers shipped as WASM components plus packs for `gre
 ## Developing
 - Build with `cargo build` (workspace).
 - Run tests with `cargo test`.
-- Packs are validated/built via `packc` (0.4.x) into `dist/packs/*.gtpack`; flows remain minimal placeholders but satisfy schema.
+- Packs are validated/built via `greentic-pack` (0.4.x) into `dist/packs/*.gtpack`; flows remain minimal placeholders but satisfy schema.
 
 ## Secrets workflow
 - Packs declare `secret_requirements` inside component capabilities; run `scripts/build_packs.sh` then `greentic-secrets init --pack dist/packs/<pack>.gtpack` to provision required keys.

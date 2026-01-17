@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       RUSTUP_TOOLCHAIN: 1.89.0
-      PACKC_VERSION: "0.4"
+      PACK_VERSION: "0.4"
     steps:
       - uses: actions/checkout@v4
       - name: Set up Rust
@@ -28,13 +28,13 @@ jobs:
         run: |
           rustup show active-toolchain
           rustup target list --toolchain "${RUSTUP_TOOLCHAIN}" --installed
-      - name: Install packc (skip if cached)
+      - name: Install greentic-pack (skip if cached)
         run: |
-          if ! command -v packc >/dev/null 2>&1 || [[ "$(packc --version)" != packc\ ${PACKC_VERSION}* ]]; then
-            cargo install packc --force
+          if ! command -v greentic-pack >/dev/null 2>&1 || [[ "$(greentic-pack --version)" != greentic-pack\ ${PACK_VERSION}* ]]; then
+            cargo install greentic-pack --force
           fi
       - name: Local check (fmt + clippy + test + packs)
-        run: PACKC_DEBUG=1 ci/local_check.sh
+        run: PACK_DEBUG=1 ci/local_check.sh
 
   live-tests:
     needs: unit

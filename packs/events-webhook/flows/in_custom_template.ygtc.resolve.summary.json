@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "flow": "in_custom_template.ygtc",
+  "nodes": {
+    "customize": {
+      "component_id": "templating.handlebars",
+      "source": {
+        "kind": "local",
+        "path": "../components/stub.wasm"
+      },
+      "digest": "sha256:93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476",
+      "manifest": {
+        "world": "greentic:flow/templating@1.0.0",
+        "version": "0.0.1"
+      }
+    }
+  }
+}

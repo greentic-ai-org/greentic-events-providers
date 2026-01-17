@@ -2,48 +2,46 @@ pack_id: greentic.events.provider.webhook
 version: 0.1.0
 kind: application
 publisher: greentic
-name: greentic.events.provider.webhook
-description: Provider-core webhook publisher (HTTP) for deterministic CI fixtures
-authors:
-  - Greentic Engineering <engineering@greentic.dev>
-license: MIT
 components:
-  - id: events-provider-webhook
-    version: 0.1.0
-    world: greentic:provider/schema-core@1.0.0
-    supports: []
-    profiles:
-      default: stateless
-      supported:
-        - stateless
-    capabilities:
-      wasi:
-        clocks: true
-      host:
-        http:
-          client: true
-    config_schema: schemas/events/webhook/config.schema.json
-    wasm: components/events-provider-webhook.wasm
+- id: events-provider-webhook
+  version: 0.1.0
+  world: greentic:provider/schema-core@1.0.0
+  supports: []
+  profiles:
+    default: stateless
+    supported:
+    - stateless
+  capabilities:
+    wasi:
+      random: false
+      clocks: true
+    host:
+      http:
+        client: true
+        server: false
+  wasm: components/events-provider-webhook.wasm
+  config_schema: schemas/events/webhook/config.schema.json
+dependencies: []
+flows: []
+assets:
+- path: schemas/events/webhook/config.schema.json
+- path: schemas/events/webhook/state.schema.json
+- path: schemas/events/webhook/README.md
 extensions:
   greentic.provider-extension.v1:
     kind: greentic.provider-extension.v1
-    version: "1.0.0"
+    version: 1.0.0
     inline:
       providers:
-        - provider_type: "events.webhook"
-          capabilities:
-            - publish
-          ops:
-            - publish
-          config_schema_ref: "schemas/events/webhook/config.schema.json"
-          state_schema_ref: "schemas/events/webhook/state.schema.json"
-          docs_ref: "schemas/events/webhook/README.md"
-          runtime:
-            component_ref: "events-provider-webhook"
-            export: "schema-core"
-            world: "greentic:provider/schema-core@1.0.0"
-flows: []
-assets:
-  - path: schemas/events/webhook/config.schema.json
-  - path: schemas/events/webhook/state.schema.json
-  - path: schemas/events/webhook/README.md
+      - provider_type: events.webhook
+        capabilities:
+        - publish
+        ops:
+        - publish
+        config_schema_ref: schemas/events/webhook/config.schema.json
+        state_schema_ref: schemas/events/webhook/state.schema.json
+        runtime:
+          component_ref: events-provider-webhook
+          export: schema-core
+          world: greentic:provider/schema-core@1.0.0
+        docs_ref: schemas/events/webhook/README.md

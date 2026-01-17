@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "flow": "out_default.ygtc",
+  "nodes": {
+    "select_provider": {
+      "source": {
+        "kind": "local",
+        "path": "../components/stub.wasm",
+        "digest": "sha256:93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476"
+      },
+      "mode": "pinned"
+    },
+    "validate_payload": {
+      "source": {
+        "kind": "local",
+        "path": "../components/stub.wasm",
+        "digest": "sha256:93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476"
+      },
+      "mode": "pinned"
+    },
+    "dispatch": {
+      "source": {
+        "kind": "local",
+        "path": "../components/stub.wasm",
+        "digest": "sha256:93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476"
+      },
+      "mode": "pinned"
+    }
+  }
+}
