@@ -158,6 +158,9 @@ fn live_twilio_outbound_smoke() -> Result<(), Box<dyn Error>> {
     if should_call_network() {
         #[cfg(feature = "live-http")]
         {
+            if !req.url.starts_with("https://") {
+                return Err(format!("Refusing to send over non-HTTPS URL: {}", req.url).into());
+            }
             let url = reqwest::Url::parse(&req.url)?;
             if url.scheme() != "https" {
                 return Err(format!("Refusing to send over non-HTTPS URL: {}", url).into());
