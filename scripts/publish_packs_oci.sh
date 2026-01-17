@@ -118,10 +118,20 @@ for pack in "${PACKS[@]}"; do
       visibility_url="https://api.github.com/${VISIBILITY_ENDPOINT}/${OWNER}/packages/container/${encoded_package}/visibility"
     fi
     echo "Visibility URL: ${visibility_url}"
-    curl -fsS -X PATCH \
-      -H "Authorization: Bearer ${GHCR_TOKEN}" \
-      -H "Accept: application/vnd.github+json" \
-      "${visibility_url}" \
-      -d '{"visibility":"public"}' >/dev/null
+    response_tmp="$(mktemp)"
+    http_code="$(
+      curl -sS -o "${response_tmp}" -w "%{http_code}" -X PATCH \
+        -H "Authorization: Bearer ${GHCR_TOKEN}" \
+        -H "Accept: application/vnd.github+json" \
+        "${visibility_url}" \
+        -d '{"visibility":"public"}' || true
+    )"
+    if [ "${http_code}" != "200" ]; then
+      echo "Visibility update failed with status ${http_code} for ${visibility_url}" >&2
+      cat "${response_tmp}" >&2
+      rm -f "${response_tmp}"
+      exit 1
+    fi
+    rm -f "${response_tmp}"
   fi
 done
