@@ -64,6 +64,31 @@ components:
         http:
           client: true
     wasm: components/stub.wasm
+  - id: templating.handlebars
+    version: 0.0.1
+    world: greentic:flow/templating@1.0.0
+    supports:
+      - messaging
+    profiles:
+      default: stateless
+      supported:
+        - stateless
+    capabilities:
+      wasi:
+        clocks: true
+        random: true
+        filesystem:
+          mode: none
+          mounts: []
+      host:
+        messaging:
+          inbound: false
+          outbound: false
+        secrets:
+          required: []
+        telemetry:
+          scope: node
+    wasm: components/templating.handlebars/stub.wasm
 flows:
   - id: sms-in-default
     file: flows/in_default.ygtc

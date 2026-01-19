@@ -38,10 +38,10 @@ extensions:
         - publish
         ops:
         - publish
-        config_schema_ref: schemas/events/webhook/config.schema.json
-        state_schema_ref: schemas/events/webhook/state.schema.json
+        config_schema_ref: assets/schemas/events/webhook/config.schema.json
+        state_schema_ref: assets/schemas/events/webhook/state.schema.json
         runtime:
           component_ref: events-provider-webhook
           export: schema-core
           world: greentic:provider/schema-core@1.0.0
-        docs_ref: schemas/events/webhook/README.md
+        docs_ref: assets/schemas/events/webhook/README.md

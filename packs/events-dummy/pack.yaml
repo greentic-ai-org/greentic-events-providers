@@ -2,47 +2,134 @@ pack_id: greentic.events.provider.dummy
 version: 0.1.0
 kind: application
 publisher: greentic
-name: greentic.events.provider.dummy
-description: Deterministic dummy events provider for CI and fixture tests
-authors:
-  - Greentic Engineering <engineering@greentic.dev>
-license: MIT
 components:
-  - id: events-provider-dummy
-    version: 0.1.0
-    world: greentic:provider/schema-core@1.0.0
-    supports: []
-    profiles:
-      default: stateless
-      supported:
-        - stateless
-    capabilities:
-      wasi:
-        clocks: true
-      host: {}
-    config_schema: schemas/events/dummy/config.schema.json
-    wasm: components/events-provider-dummy.wasm
+- id: events-provider-dummy
+  version: 0.1.0
+  world: greentic:provider/schema-core@1.0.0
+  supports: []
+  profiles:
+    default: stateless
+    supported:
+    - stateless
+  capabilities:
+    wasi:
+      random: false
+      clocks: true
+    host: {}
+  wasm: components/events-provider-dummy.wasm
+  config_schema: schemas/events/dummy/config.schema.json
+- id: events-provider-email
+  version: 0.1.0
+  world: root:component/root
+  supports:
+  - messaging
+  profiles:
+    default: default
+    supported:
+    - default
+  capabilities:
+    wasi:
+      random: false
+      clocks: false
+    host: {}
+  wasm: components/events-provider-email.wasm
+- id: events-provider-sms
+  version: 0.1.0
+  world: root:component/root
+  supports:
+  - messaging
+  profiles:
+    default: default
+    supported:
+    - default
+  capabilities:
+    wasi:
+      random: false
+      clocks: false
+    host: {}
+  wasm: components/events-provider-sms.wasm
+- id: events-provider-timer
+  version: 0.1.0
+  world: root:component/root
+  supports:
+  - messaging
+  profiles:
+    default: default
+    supported:
+    - default
+  capabilities:
+    wasi:
+      random: false
+      clocks: false
+    host: {}
+  wasm: components/events-provider-timer.wasm
+- id: events-provider-webhook
+  version: 0.1.0
+  world: root:component/root
+  supports:
+  - messaging
+  profiles:
+    default: default
+    supported:
+    - default
+  capabilities:
+    wasi:
+      random: false
+      clocks: false
+    host: {}
+  wasm: components/events-provider-webhook.wasm
+- id: stub
+  version: 0.1.0
+  world: root:component/root
+  supports:
+  - messaging
+  profiles:
+    default: default
+    supported:
+    - default
+  capabilities:
+    wasi:
+      random: false
+      clocks: false
+    host: {}
+  wasm: components/stub.wasm
+- id: templating.handlebars
+  version: 0.1.0
+  world: root:component/root
+  supports:
+  - messaging
+  profiles:
+    default: default
+    supported:
+    - default
+  capabilities:
+    wasi:
+      random: false
+      clocks: false
+    host: {}
+  wasm: components/templating.handlebars/stub.wasm
+dependencies: []
+flows: []
+assets:
+- path: schemas/events/dummy/config.schema.json
+- path: schemas/events/dummy/state.schema.json
+- path: schemas/events/dummy/README.md
 extensions:
   greentic.provider-extension.v1:
     kind: greentic.provider-extension.v1
-    version: "1.0.0"
+    version: 1.0.0
     inline:
       providers:
-        - provider_type: "events.dummy"
-          capabilities:
-            - publish
-          ops:
-            - publish
-            - echo
-          config_schema_ref: "schemas/events/dummy/config.schema.json"
-          state_schema_ref: "schemas/events/dummy/state.schema.json"
-          docs_ref: "schemas/events/dummy/README.md"
-          runtime:
-            component_ref: "events-provider-dummy"
-            export: "schema-core"
-            world: "greentic:provider/schema-core@1.0.0"
-flows: []
-assets:
-  - path: schemas/events/dummy/config.schema.json
-  - path: schemas/events/dummy/state.schema.json
-  - path: schemas/events/dummy/README.md
+      - provider_type: events.dummy
+        capabilities:
+        - publish
+        ops:
+        - publish
+        - echo
+        config_schema_ref: assets/schemas/events/dummy/config.schema.json
+        state_schema_ref: assets/schemas/events/dummy/state.schema.json
+        runtime:
+          component_ref: events-provider-dummy
+          export: schema-core
+          world: greentic:provider/schema-core@1.0.0
+        docs_ref: assets/schemas/events/dummy/README.md

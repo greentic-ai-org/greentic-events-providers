@@ -73,7 +73,12 @@ fn sms_pack_parses() {
     let pack: Pack = serde_yaml_bw::from_str(&raw).unwrap();
     assert_eq!(pack.events.providers.len(), 2);
     assert_eq!(pack.pack_id, "greentic.events.sms");
-    assert_eq!(pack.components.len(), 2);
+    let sms_components = pack
+        .components
+        .iter()
+        .filter(|c| c.id.starts_with("events-sms-"))
+        .count();
+    assert_eq!(sms_components, 2);
 
     let keys: Vec<_> = pack
         .components

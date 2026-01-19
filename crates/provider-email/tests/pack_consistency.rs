@@ -73,7 +73,12 @@ fn email_pack_parses() {
     let pack: Pack = serde_yaml_bw::from_str(&raw).unwrap();
     assert_eq!(pack.pack_id, "greentic.events.email");
     assert_eq!(pack.events.providers.len(), 4);
-    assert_eq!(pack.components.len(), 2);
+    let email_components = pack
+        .components
+        .iter()
+        .filter(|c| c.id.starts_with("events-email-"))
+        .count();
+    assert_eq!(email_components, 2);
 
     let required_keys: Vec<_> = pack
         .components

@@ -2,103 +2,203 @@ pack_id: greentic.events.email
 version: 0.1.0
 kind: application
 publisher: greentic
-name: greentic.events.email
-description: Greentic email event providers (MS Graph / Gmail)
-authors:
-  - Greentic Engineering <engineering@greentic.dev>
-license: MIT
 components:
-  - id: events-email-source
-    version: 1.0.0
-    world: greentic:events/source@1.0.0
-    supports:
-      - event
-    profiles:
-      default: stateless
-      supported:
-        - stateless
-    capabilities:
-      wasi:
-        clocks: true
-      host:
-        secrets:
-          required:
-            - key: MSGRAPH_CLIENT_SECRET
-              required: true
-              description: Client secret for the configured Microsoft Graph app registration
-              scope:
-                env: "{{env}}"
-                tenant: "{{tenant}}"
-              format: text
-            - key: GMAIL_CLIENT_SECRET
-              required: true
-              description: Client secret for the configured Google Workspace project
-              scope:
-                env: "{{env}}"
-                tenant: "{{tenant}}"
-              format: text
-            - key: GMAIL_REFRESH_TOKEN
-              required: true
-              description: Refresh token for the service account or delegated Gmail user
-              scope:
-                env: "{{env}}"
-                tenant: "{{tenant}}"
-              format: text
-        events:
-          inbound: false
-          outbound: true
-    wasm: components/stub.wasm
-  - id: events-email-sink
-    version: 1.0.0
-    world: greentic:events/sink@1.0.0
-    supports:
-      - event
-    profiles:
-      default: stateless
-      supported:
-        - stateless
-    capabilities:
-      wasi:
-        clocks: true
-      host:
-        secrets:
-          required:
-            - key: MSGRAPH_CLIENT_SECRET
-              required: true
-              description: Client secret for the configured Microsoft Graph app registration
-              scope:
-                env: "{{env}}"
-                tenant: "{{tenant}}"
-              format: text
-            - key: GMAIL_CLIENT_SECRET
-              required: true
-              description: Client secret for the configured Google Workspace project
-              scope:
-                env: "{{env}}"
-                tenant: "{{tenant}}"
-              format: text
-            - key: GMAIL_REFRESH_TOKEN
-              required: true
-              description: Refresh token for the service account or delegated Gmail user
-              scope:
-                env: "{{env}}"
-                tenant: "{{tenant}}"
-              format: text
-        events:
-          inbound: true
-          outbound: false
-        http:
-          client: true
-    wasm: components/stub.wasm
+- id: events-email-source
+  version: 1.0.0
+  world: greentic:events/source@1.0.0
+  supports:
+  - event
+  profiles:
+    default: stateless
+    supported:
+    - stateless
+  capabilities:
+    wasi:
+      clocks: true
+    host:
+      secrets:
+        required:
+        - key: MSGRAPH_CLIENT_SECRET
+          required: true
+          description: Client secret for the configured Microsoft Graph app registration
+          scope:
+            env: "{{env}}"
+            tenant: "{{tenant}}"
+          format: text
+        - key: GMAIL_CLIENT_SECRET
+          required: true
+          description: Client secret for the configured Google Workspace project
+          scope:
+            env: "{{env}}"
+            tenant: "{{tenant}}"
+          format: text
+        - key: GMAIL_REFRESH_TOKEN
+          required: true
+          description: Refresh token for the service account or delegated Gmail user
+          scope:
+            env: "{{env}}"
+            tenant: "{{tenant}}"
+          format: text
+      events:
+        inbound: false
+        outbound: true
+  wasm: components/stub.wasm
+- id: events-email-sink
+  version: 1.0.0
+  world: greentic:events/sink@1.0.0
+  supports:
+  - event
+  profiles:
+    default: stateless
+    supported:
+    - stateless
+  capabilities:
+    wasi:
+      random: false
+      clocks: true
+    host:
+      secrets:
+        required:
+        - key: MSGRAPH_CLIENT_SECRET
+          required: true
+          description: Client secret for the configured Microsoft Graph app registration
+          scope:
+            env: '{{env}}'
+            tenant: '{{tenant}}'
+          format: text
+        - key: GMAIL_CLIENT_SECRET
+          required: true
+          description: Client secret for the configured Google Workspace project
+          scope:
+            env: '{{env}}'
+            tenant: '{{tenant}}'
+          format: text
+        - key: GMAIL_REFRESH_TOKEN
+          required: true
+          description: Refresh token for the service account or delegated Gmail user
+          scope:
+            env: '{{env}}'
+            tenant: '{{tenant}}'
+          format: text
+      events:
+        inbound: true
+        outbound: false
+      http:
+        client: true
+        server: false
+  wasm: components/stub.wasm
+- id: events-provider-dummy
+  version: 0.1.0
+  world: root:component/root
+  supports:
+  - messaging
+  profiles:
+    default: default
+    supported:
+    - default
+  capabilities:
+    wasi:
+      random: false
+      clocks: false
+    host: {}
+  wasm: components/events-provider-dummy.wasm
+- id: events-provider-email
+  version: 0.1.0
+  world: root:component/root
+  supports:
+  - messaging
+  profiles:
+    default: default
+    supported:
+    - default
+  capabilities:
+    wasi:
+      random: false
+      clocks: false
+    host: {}
+  wasm: components/events-provider-email.wasm
+- id: events-provider-sms
+  version: 0.1.0
+  world: root:component/root
+  supports:
+  - messaging
+  profiles:
+    default: default
+    supported:
+    - default
+  capabilities:
+    wasi:
+      random: false
+      clocks: false
+    host: {}
+  wasm: components/events-provider-sms.wasm
+- id: events-provider-timer
+  version: 0.1.0
+  world: root:component/root
+  supports:
+  - messaging
+  profiles:
+    default: default
+    supported:
+    - default
+  capabilities:
+    wasi:
+      random: false
+      clocks: false
+    host: {}
+  wasm: components/events-provider-timer.wasm
+- id: events-provider-webhook
+  version: 0.1.0
+  world: root:component/root
+  supports:
+  - messaging
+  profiles:
+    default: default
+    supported:
+    - default
+  capabilities:
+    wasi:
+      random: false
+      clocks: false
+    host: {}
+  wasm: components/events-provider-webhook.wasm
+- id: templating.handlebars
+  version: 0.0.1
+  world: greentic:flow/templating@1.0.0
+  supports:
+  - messaging
+  profiles:
+    default: stateless
+    supported:
+    - stateless
+  capabilities:
+    wasi:
+      filesystem:
+        mode: none
+        mounts: []
+      random: true
+      clocks: true
+    host:
+      secrets:
+        required: []
+      messaging:
+        inbound: false
+        outbound: false
+      telemetry:
+        scope: node
+  wasm: components/templating.handlebars/stub.wasm
+dependencies: []
 flows:
-  - id: email-in-default
-    file: flows/in_default.ygtc
-    entrypoints:
-      - email-in-default
-  - id: email-out-default
-    file: flows/out_default.ygtc
-    entrypoints:
-      - email-out-default
+- id: email-in-default
+  file: flows/in_default.ygtc
+  tags: []
+  entrypoints:
+  - email-in-default
+- id: email-out-default
+  file: flows/out_default.ygtc
+  tags: []
+  entrypoints:
+  - email-out-default
 events:
   providers:
     - name: "email-in-msgraph"
@@ -133,3 +233,4 @@ events:
         reliability: "at_least_once"
         topics:
           - "email.out.gmail"
+assets: []

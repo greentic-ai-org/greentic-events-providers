@@ -37,10 +37,10 @@ extensions:
         - publish
         ops:
         - publish
-        config_schema_ref: schemas/events/email/config.schema.json
-        state_schema_ref: schemas/events/email/README.md
+        config_schema_ref: assets/schemas/events/email/config.schema.json
+        state_schema_ref: assets/schemas/events/email/README.md
         runtime:
           component_ref: events-provider-email
           export: schema-core
           world: greentic:provider/schema-core@1.0.0
-        docs_ref: schemas/events/email/README.md
+        docs_ref: assets/schemas/events/email/README.md

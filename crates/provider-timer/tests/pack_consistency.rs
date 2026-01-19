@@ -73,7 +73,12 @@ fn timer_pack_parses() {
     let pack: Pack = serde_yaml_bw::from_str(&raw).unwrap();
     assert_eq!(pack.events.providers.len(), 1);
     assert_eq!(pack.pack_id, "greentic.events.timer");
-    assert_eq!(pack.components.len(), 1);
+    let timer_components = pack
+        .components
+        .iter()
+        .filter(|c| c.id.starts_with("events-timer-"))
+        .count();
+    assert_eq!(timer_components, 1);
 
     let provider = &pack.events.providers[0];
     assert_eq!(provider.component, "events-timer-source@1.0.0");

@@ -36,10 +36,10 @@ extensions:
         ops:
         - publish
         - echo
-        config_schema_ref: schemas/events/dummy/config.schema.json
-        state_schema_ref: schemas/events/dummy/state.schema.json
+        config_schema_ref: assets/schemas/events/dummy/config.schema.json
+        state_schema_ref: assets/schemas/events/dummy/state.schema.json
         runtime:
           component_ref: events-provider-dummy
           export: schema-core
           world: greentic:provider/schema-core@1.0.0
-        docs_ref: schemas/events/dummy/README.md
+        docs_ref: assets/schemas/events/dummy/README.md

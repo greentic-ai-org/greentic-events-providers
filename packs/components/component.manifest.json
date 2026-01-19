@@ -1,8 +1,0 @@
-{
-  "id": "templating.handlebars",
-  "version": "0.0.1",
-  "world": "greentic:flow/templating@1.0.0",
-  "artifacts": {
-    "component_wasm": "stub.wasm"
-  }
-}
