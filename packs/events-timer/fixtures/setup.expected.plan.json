@@ -1,0 +1,21 @@
+{
+  "config_patch": {
+    "schedules": [
+      {
+        "name": "daily",
+        "cron": "0 0 * * *",
+        "topic": "timer.daily"
+      }
+    ]
+  },
+  "secrets_patch": {
+    "set": {},
+    "delete": []
+  },
+  "webhook_ops": [],
+  "subscription_ops": [],
+  "oauth_ops": [],
+  "notes": [
+    "dry-run: timer provisioning plan"
+  ]
+}

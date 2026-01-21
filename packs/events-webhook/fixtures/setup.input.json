@@ -1,0 +1,7 @@
+{
+  "webhook": {
+    "path": "/ingest",
+    "topic_prefix": "webhook.acme"
+  },
+  "public_base_url": "https://example.invalid"
+}

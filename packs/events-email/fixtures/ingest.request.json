@@ -1,0 +1,10 @@
+{
+  "provider": "msgraph",
+  "folder": "inbox",
+  "subject": "Hello",
+  "from": "user@example.com",
+  "to": [
+    "support@example.com"
+  ],
+  "body": "Hi from inbox"
+}

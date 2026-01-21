@@ -8,3 +8,9 @@ Purpose: cron/interval-based event source.
 - Topics: `timer.<name>` (e.g., `timer.daily.summary`).
 - Packs: `packs/events/timer.yaml`.
 - Flows: `packs/events-timer/flows/default.ygtc`.
+
+## Setup
+
+- Entry flow: `setup` (collect → validate → apply → summary).
+- Required inputs: `schedules` (cron/interval list with topics).
+- Dry-run plan: emits config patches for the requested schedules.

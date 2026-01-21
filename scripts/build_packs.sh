@@ -94,6 +94,10 @@ for dir in "${PACK_DIRS[@]}"; do
     --gtpack-out "${gtpack_out}" \
     --manifest "${manifest_out}" \
     --sbom "${sbom_out}"
+
+  if [ -d "${work_dir}/schemas" ]; then
+    cargo run -q -p sbom-patch -- "${work_dir}" "${gtpack_out}" "${sbom_out}"
+  fi
 done
 
 echo "Pack artifacts created under ${DIST_DIR}"

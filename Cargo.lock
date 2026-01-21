@@ -110,6 +110,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7d902e3d592a523def97af8f317b08ce16b7ab854c1985a0c671e6f15cebc236"
 
 [[package]]
+name = "arrayref"
+version = "0.3.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "76a2e8124351fda1ef8aaaa3bbd7ebbcb486bbcd4225aca0aa0d84bb2db8fecb"
+
+[[package]]
+name = "arrayvec"
+version = "0.7.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7c02d123df017efcdfbd739ef81735b36c5ba83ec3c59c80a9d7ecc718f92e50"
+
+[[package]]
 name = "async-nats"
 version = "0.45.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -222,6 +234,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "812e12b5285cc515a9c72a5c1d3b6d46a19dac5acfef5265968c166106e31dd3"
 
 [[package]]
+name = "blake3"
+version = "1.8.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2468ef7d57b3fb7e16b576e8377cdbde2320c60e1491e961d11da40fc4f02a2d"
+dependencies = [
+ "arrayref",
+ "arrayvec",
+ "cc",
+ "cfg-if",
+ "constant_time_eq",
+ "cpufeatures",
+]
+
+[[package]]
 name = "block-buffer"
 version = "0.10.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -328,7 +354,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "57663b653d948a338bfb3eeba9bb2fd5fcfaecb9e199e87e1eda4d9e8b240fd9"
 dependencies = [
  "ciborium-io",
- "half",
+ "half 2.7.1",
 ]
 
 [[package]]
@@ -410,6 +436,12 @@ name = "const-oid"
 version = "0.9.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2459377285ad874054d797f3ccebf984978aa39129f6eafde5cdc8315b612f8"
+
+[[package]]
+name = "constant_time_eq"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3d52eff69cd5e647efe296129160853a42795992097e8af39800e1060caeea9b"
 
 [[package]]
 name = "core-foundation"
@@ -903,9 +935,11 @@ name = "events-provider-dummy"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "blake3",
  "greentic-interfaces-guest",
  "greentic-types",
  "serde",
+ "serde_cbor",
  "serde_json",
  "tempfile",
  "uuid",
@@ -1211,9 +1245,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-interfaces"
-version = "0.4.75"
+version = "0.4.77"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "82c49260f66ea839f540c5febc0dafcdea9d2cc2e7ae962c4332c856d02a57bc"
+checksum = "8b2333dc357c7c0d48539e342b6807efb62b4a88753adff1efa989ef240e76e0"
 dependencies = [
  "anyhow",
  "greentic-types",
@@ -1228,9 +1262,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-interfaces-guest"
-version = "0.4.75"
+version = "0.4.77"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b80346e01ff0c7b47751a554a49f2299c465c96d2074f464256a34f8b8cb572e"
+checksum = "b6aca4140aa2d5a92bd0aae8418865631bdb739ea0c563b39b3ddc5438eddd35"
 dependencies = [
  "greentic-interfaces",
  "greentic-types",
@@ -1241,9 +1275,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-interfaces-host"
-version = "0.4.75"
+version = "0.4.77"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5517e010da335a02dbf8510fb8f42116527b7cce90d7a40c74ddbf61b5dc2a39"
+checksum = "19946a44ade65a46426414aa2f6dd0f65cb7403af9b10d5bc0d7ab609e0e05f7"
 dependencies = [
  "greentic-interfaces",
  "greentic-types",
@@ -1253,9 +1287,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-interfaces-wasmtime"
-version = "0.4.75"
+version = "0.4.77"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3fad75deca9b078289c6871d97805d38624dd25b6826dec4e96a2de39ae55470"
+checksum = "1ee25de0090cc6691825d3f0424155d0e73f463d62c15a9ef41025c21b314471"
 dependencies = [
  "anyhow",
  "camino",
@@ -1452,9 +1486,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-types"
-version = "0.4.37"
+version = "0.4.39"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aa7a42265b70257abbed524d338a84e09c275687eb063e1adda9091f669f86a1"
+checksum = "5edd606e6f8d745fea983c2c462ce41401242eafb019c1e4e15b38931fd8de14"
 dependencies = [
  "anyhow",
  "chrono",
@@ -1479,9 +1513,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-types-macros"
-version = "0.4.37"
+version = "0.4.39"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c7b87b293d7d93cd57eff6b312a260b39822400182c21acd8a7d8a7f8922b4a"
+checksum = "46053deb127ddd24c505d0000a110af905c014790452cfe7c697a361d9b3fefa"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1517,6 +1551,12 @@ dependencies = [
  "tokio-util",
  "tracing",
 ]
+
+[[package]]
+name = "half"
+version = "1.8.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1b43ede17f21864e81be2fa654110bf1e793774238d86ef8555c37e6519c0403"
 
 [[package]]
 name = "half"
@@ -2287,9 +2327,9 @@ checksum = "d05e27ee213611ffe7d6348b942e8f942b37114c00cc03cec254295a4a17852e"
 
 [[package]]
 name = "openssl-probe"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f50d9b3dabb09ecd771ad0aa242ca6894994c130308ca3d7684634df8037391"
+checksum = "7c87def4c32ab89d880effc9e097653c8da5d6ef28e6b539d313baaacfbafcbe"
 
 [[package]]
 name = "opentelemetry"
@@ -2592,7 +2632,7 @@ dependencies = [
 
 [[package]]
 name = "provider-core"
-version = "0.4.7"
+version = "0.4.8"
 dependencies = [
  "chrono",
  "greentic-interfaces-guest",
@@ -2608,7 +2648,7 @@ dependencies = [
 
 [[package]]
 name = "provider-email"
-version = "0.4.7"
+version = "0.4.8"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -2627,7 +2667,7 @@ dependencies = [
 
 [[package]]
 name = "provider-sms"
-version = "0.4.7"
+version = "0.4.8"
 dependencies = [
  "base64 0.22.1",
  "chrono",
@@ -2645,7 +2685,7 @@ dependencies = [
 
 [[package]]
 name = "provider-timer"
-version = "0.4.7"
+version = "0.4.8"
 dependencies = [
  "chrono",
  "greentic-interfaces-guest",
@@ -2660,7 +2700,7 @@ dependencies = [
 
 [[package]]
 name = "provider-webhook"
-version = "0.4.7"
+version = "0.4.8"
 dependencies = [
  "anyhow",
  "greentic-interfaces-guest",
@@ -3094,7 +3134,7 @@ version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "612460d5f7bea540c490b2b6395d8e34a953e52b491accd6c86c8164c5932a63"
 dependencies = [
- "openssl-probe 0.2.0",
+ "openssl-probe 0.2.1",
  "rustls-pki-types",
  "schannel",
  "security-framework 3.5.1",
@@ -3197,6 +3237,18 @@ checksum = "4fb771b59f6b1985d1406325ec28f97cfb14256abcec4fdfb37b36a1766d6af7"
 dependencies = [
  "arraydeque",
  "hashlink",
+]
+
+[[package]]
+name = "sbom-patch"
+version = "0.4.8"
+dependencies = [
+ "anyhow",
+ "blake3",
+ "serde",
+ "serde_cbor",
+ "serde_json",
+ "zip",
 ]
 
 [[package]]
@@ -3329,6 +3381,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f3a1a3341211875ef120e117ea7fd5228530ae7e7036a779fdc9117be6b3282c"
 dependencies = [
  "ordered-float",
+ "serde",
+]
+
+[[package]]
+name = "serde_cbor"
+version = "0.11.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2bef2ebfde456fb76bbcf9f59315333decc4fda0b2b44b420243c11e0f5ec1f5"
+dependencies = [
+ "half 1.8.3",
  "serde",
 ]
 
@@ -5194,6 +5256,6 @@ dependencies = [
 
 [[package]]
 name = "zmij"
-version = "1.0.15"
+version = "1.0.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "94f63c051f4fe3c1509da62131a678643c5b6fbdc9273b2b79d4378ebda003d2"
+checksum = "dfcd145825aace48cff44a8844de64bf75feec3080e0aa5cdbde72961ae51a65"

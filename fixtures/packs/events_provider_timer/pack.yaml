@@ -23,8 +23,9 @@ components:
   config_schema: schemas/events/timer/config.schema.json
 dependencies: []
 flows: []
-assets:
+schemas:
 - path: schemas/events/timer/config.schema.json
+assets:
 - path: schemas/events/timer/README.md
 extensions:
   greentic.provider-extension.v1:
@@ -37,8 +38,7 @@ extensions:
         - publish
         ops:
         - publish
-        config_schema_ref: assets/schemas/events/timer/config.schema.json
-        state_schema_ref: assets/schemas/events/timer/README.md
+        config_schema_ref: schemas/events/timer/config.schema.json
         runtime:
           component_ref: events-provider-timer
           export: schema-core

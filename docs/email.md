@@ -10,3 +10,10 @@ Purpose: inbound/outbound email events through Microsoft Graph or Gmail/Google W
 - Secrets events: emit metadata-only payloads on `greentic.secrets.put|delete|rotate.*|missing.detected` when secrets are resolved or missing (no values).
 - Packs: `packs/events-email/pack.yaml`.
 - Flows: `packs/events-email/flows/in_default.ygtc`, `packs/events-email/flows/out_default.ygtc`.
+
+## Setup
+
+- Entry flow: `setup` (collect → validate → apply → summary).
+- Required inputs: `msgraph.client_id`, `gmail.client_id`, `sender.default_from`.
+- Required secrets: `MSGRAPH_CLIENT_SECRET`, `GMAIL_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN`.
+- Dry-run plan: emits subscription ops for MS Graph + Gmail; no webhook ops.

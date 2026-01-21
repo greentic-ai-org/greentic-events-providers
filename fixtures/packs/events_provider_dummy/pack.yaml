@@ -20,9 +20,10 @@ components:
   config_schema: schemas/events/dummy/config.schema.json
 dependencies: []
 flows: []
-assets:
+schemas:
 - path: schemas/events/dummy/config.schema.json
 - path: schemas/events/dummy/state.schema.json
+assets:
 - path: schemas/events/dummy/README.md
 extensions:
   greentic.provider-extension.v1:
@@ -36,8 +37,8 @@ extensions:
         ops:
         - publish
         - echo
-        config_schema_ref: assets/schemas/events/dummy/config.schema.json
-        state_schema_ref: assets/schemas/events/dummy/state.schema.json
+        config_schema_ref: schemas/events/dummy/config.schema.json
+        state_schema_ref: schemas/events/dummy/state.schema.json
         runtime:
           component_ref: events-provider-dummy
           export: schema-core

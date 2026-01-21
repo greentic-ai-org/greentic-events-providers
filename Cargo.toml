@@ -5,6 +5,7 @@ members = [
     "crates/provider-email",
     "crates/provider-sms",
     "crates/provider-timer",
+    "crates/sbom-patch",
     "components/events-provider-dummy",
     "components/events-provider-webhook",
     "components/events-provider-timer",
@@ -16,7 +17,7 @@ resolver = "2"
 [workspace.package]
 edition = "2024"
 rust-version = "1.89"
-version = "0.4.7"
+version = "0.4.8"
 
 [workspace.dependencies]
 anyhow = "1"

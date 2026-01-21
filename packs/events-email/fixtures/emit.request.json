@@ -1,0 +1,8 @@
+{
+  "provider": "msgraph",
+  "to": [
+    "user@example.com"
+  ],
+  "subject": "Test",
+  "body": "Hello from Greentic"
+}

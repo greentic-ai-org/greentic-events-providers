@@ -1,0 +1,6 @@
+{
+  "op": "echo",
+  "payload": {
+    "message": "hello"
+  }
+}

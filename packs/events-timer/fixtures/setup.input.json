@@ -1,0 +1,9 @@
+{
+  "schedules": [
+    {
+      "name": "daily",
+      "cron": "0 0 * * *",
+      "topic": "timer.daily"
+    }
+  ]
+}

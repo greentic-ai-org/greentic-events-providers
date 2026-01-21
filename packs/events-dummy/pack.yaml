@@ -2,6 +2,11 @@ pack_id: greentic.events.provider.dummy
 version: 0.1.0
 kind: application
 publisher: greentic
+meta:
+  entry_flows: {}
+  requires_public_base_url: false
+  capabilities:
+  - provisioning:none
 components:
 - id: events-provider-dummy
   version: 0.1.0
@@ -110,9 +115,10 @@ components:
   wasm: components/templating.handlebars/stub.wasm
 dependencies: []
 flows: []
-assets:
+schemas:
 - path: schemas/events/dummy/config.schema.json
 - path: schemas/events/dummy/state.schema.json
+assets:
 - path: schemas/events/dummy/README.md
 extensions:
   greentic.provider-extension.v1:
@@ -126,8 +132,8 @@ extensions:
         ops:
         - publish
         - echo
-        config_schema_ref: assets/schemas/events/dummy/config.schema.json
-        state_schema_ref: assets/schemas/events/dummy/state.schema.json
+        config_schema_ref: schemas/events/dummy/config.schema.json
+        state_schema_ref: schemas/events/dummy/state.schema.json
         runtime:
           component_ref: events-provider-dummy
           export: schema-core

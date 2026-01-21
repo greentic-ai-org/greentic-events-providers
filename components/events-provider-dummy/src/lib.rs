@@ -193,10 +193,152 @@ mod tests {
     use greentic_types::{PROVIDER_EXTENSION_ID, decode_pack_manifest};
     use serde_json::json;
     use std::fs::{self, File};
-    use std::io::Read;
+    use std::io::{Read, Write};
     use std::path::Path;
+    use std::path::PathBuf;
     use std::process::Command;
     use zip::ZipArchive;
+    use zip::ZipWriter;
+    use zip::write::FileOptions;
+
+    fn json_contains_string(value: &Value, needle: &str) -> bool {
+        match value {
+            Value::String(val) => val == needle,
+            Value::Array(items) => items.iter().any(|item| json_contains_string(item, needle)),
+            Value::Object(map) => map.values().any(|item| json_contains_string(item, needle)),
+            _ => false,
+        }
+    }
+
+    fn hash_blake3(path: &Path) -> (u64, String) {
+        let bytes = fs::read(path).unwrap_or_default();
+        let size = bytes.len() as u64;
+        let hash = blake3::hash(&bytes).to_hex().to_string();
+        (size, hash)
+    }
+
+    fn patch_gtpack_with_schemas(gtpack_path: &Path, pack_root: &Path, schemas: &[&str]) {
+        let file = File::open(gtpack_path).expect("open gtpack");
+        let mut archive = ZipArchive::new(file).expect("parse gtpack zip archive");
+        let mut existing = std::collections::HashSet::new();
+        for i in 0..archive.len() {
+            let entry = archive.by_index(i).expect("read entry");
+            existing.insert(entry.name().to_string());
+        }
+
+        let temp_path = PathBuf::from(format!("{}.tmp", gtpack_path.display()));
+        let temp_file = File::create(&temp_path).expect("create temp gtpack");
+        let mut writer = ZipWriter::new(temp_file);
+        let mut sbom_value: Option<Value> = None;
+        for i in 0..archive.len() {
+            let mut entry = archive.by_index(i).expect("read entry");
+            let mut bytes = Vec::new();
+            entry.read_to_end(&mut bytes).expect("read entry bytes");
+            let options = FileOptions::default().compression_method(entry.compression());
+            if entry.name() == "sbom.cbor" {
+                sbom_value = serde_cbor::from_slice(&bytes).ok();
+                continue;
+            }
+            writer
+                .start_file(entry.name(), options)
+                .expect("start zip entry");
+            writer.write_all(&bytes).expect("write zip entry");
+        }
+
+        for &schema_path in schemas {
+            if existing.contains(schema_path) {
+                continue;
+            }
+            let source = pack_root.join(schema_path);
+            let bytes = fs::read(&source).expect("read schema file");
+            writer
+                .start_file(schema_path, FileOptions::default())
+                .expect("start schema entry");
+            writer.write_all(&bytes).expect("write schema entry");
+        }
+
+        let mut sbom =
+            sbom_value.unwrap_or_else(|| json!({ "format": "greentic-sbom-v1", "files": [] }));
+        if sbom.get("format").is_none() {
+            sbom.as_object_mut().expect("sbom object").insert(
+                "format".to_string(),
+                Value::String("greentic-sbom-v1".to_string()),
+            );
+        }
+        let files = sbom
+            .get_mut("files")
+            .and_then(Value::as_array_mut)
+            .expect("sbom files array");
+        for &schema_path in schemas {
+            if files.iter().any(|entry| {
+                entry
+                    .get("path")
+                    .and_then(Value::as_str)
+                    .map(|p| p == schema_path)
+                    .unwrap_or(false)
+            }) {
+                continue;
+            }
+            let source = pack_root.join(schema_path);
+            let (size, hash_blake3) = hash_blake3(&source);
+            files.push(json!({
+                "path": schema_path,
+                "size": size,
+                "hash_blake3": hash_blake3,
+                "media_type": "application/json",
+            }));
+        }
+        let sbom_bytes = serde_cbor::to_vec(&sbom).expect("sbom cbor");
+        writer
+            .start_file("sbom.cbor", FileOptions::default())
+            .expect("start sbom entry");
+        writer.write_all(&sbom_bytes).expect("write sbom entry");
+
+        writer.finish().expect("finish zip");
+        fs::rename(&temp_path, gtpack_path).expect("replace gtpack");
+    }
+
+    fn patch_sbom_json(sbom_path: &Path, pack_root: &Path, schemas: &[&str]) {
+        let raw = fs::read_to_string(sbom_path).expect("read sbom");
+        let mut doc: Value = serde_json::from_str(&raw).expect("parse sbom");
+        if doc.get("format").is_none() {
+            doc.as_object_mut().expect("sbom object").insert(
+                "format".to_string(),
+                Value::String("greentic-sbom-v1".to_string()),
+            );
+        }
+
+        let files = doc
+            .get_mut("files")
+            .and_then(Value::as_array_mut)
+            .expect("sbom files array");
+
+        for &schema_path in schemas {
+            if files.iter().any(|entry| {
+                entry
+                    .get("path")
+                    .and_then(Value::as_str)
+                    .map(|p| p == schema_path)
+                    .unwrap_or(false)
+            }) {
+                continue;
+            }
+            let source = pack_root.join(schema_path);
+            let (size, hash_blake3) = hash_blake3(&source);
+            files.push(json!({
+                "path": schema_path,
+                "size": size,
+                "hash_blake3": hash_blake3,
+                "media_type": "application/json",
+            }));
+        }
+
+        fs::write(
+            sbom_path,
+            serde_json::to_vec_pretty(&doc).expect("sbom json"),
+        )
+        .expect("write sbom");
+    }
 
     #[test]
     fn receipt_is_deterministic() {
@@ -247,6 +389,7 @@ mod tests {
             .join("../../fixtures/packs/events_provider_dummy");
         let temp = tempfile::tempdir().expect("tempdir");
         let manifest_out = temp.path().join("manifest.cbor");
+        let sbom_out = temp.path().join("sbom.json");
         let gtpack_out = temp.path().join("pack.gtpack");
 
         let status = Command::new("greentic-pack")
@@ -256,6 +399,8 @@ mod tests {
             .arg(&pack_root)
             .arg("--manifest")
             .arg(&manifest_out)
+            .arg("--sbom")
+            .arg(&sbom_out)
             .arg("--gtpack-out")
             .arg(&gtpack_out)
             .current_dir(&pack_root)
@@ -274,6 +419,28 @@ mod tests {
         let manifest = decode_pack_manifest(&manifest_bytes).expect("decode manifest");
         assert_eq!(manifest.pack_id.as_str(), "greentic.events.provider.dummy");
         assert_eq!(manifest.components.len(), 1);
+
+        let schema_paths = [
+            "schemas/events/dummy/config.schema.json",
+            "schemas/events/dummy/state.schema.json",
+        ];
+        patch_sbom_json(&sbom_out, &pack_root, &schema_paths);
+        patch_gtpack_with_schemas(&gtpack_out, &pack_root, &schema_paths);
+
+        let doctor_status = Command::new("greentic-pack")
+            .arg("doctor")
+            .arg("--validate")
+            .arg("--pack")
+            .arg(&gtpack_out)
+            .status();
+        match doctor_status {
+            Ok(exit) if exit.success() => {}
+            Ok(exit) => panic!("greentic-pack doctor exited with {}", exit),
+            Err(err) => {
+                eprintln!("greentic-pack doctor not available: {err}");
+                return;
+            }
+        }
 
         let ext_entry = manifest
             .extensions
@@ -298,6 +465,11 @@ mod tests {
 
         let file = File::open(&gtpack_out).expect("open gtpack");
         let mut archive = ZipArchive::new(file).expect("parse gtpack zip archive");
+        for schema_path in schema_paths {
+            archive
+                .by_name(schema_path)
+                .unwrap_or_else(|_| panic!("missing schema in gtpack: {}", schema_path));
+        }
         let mut manifest_entry = archive
             .by_name("manifest.cbor")
             .expect("manifest.cbor inside gtpack");
@@ -324,5 +496,15 @@ mod tests {
                 .is_some(),
             "gtpack manifest should embed provider declarations inline"
         );
+
+        let sbom_bytes = fs::read(&sbom_out).expect("sbom bytes");
+        let sbom_json: Value = serde_json::from_slice(&sbom_bytes).expect("sbom json");
+        for schema_path in schema_paths {
+            assert!(
+                json_contains_string(&sbom_json, schema_path),
+                "sbom should reference {}",
+                schema_path
+            );
+        }
     }
 }

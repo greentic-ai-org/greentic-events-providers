@@ -1,0 +1,18 @@
+[
+  {
+    "op": "create",
+    "id": "msgraph-subscription",
+    "metadata": {
+      "provider": "msgraph",
+      "resource": "inbox"
+    }
+  },
+  {
+    "op": "create",
+    "id": "gmail-watch",
+    "metadata": {
+      "provider": "gmail",
+      "label": "inbox"
+    }
+  }
+]

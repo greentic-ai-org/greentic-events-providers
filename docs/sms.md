@@ -10,3 +10,10 @@ Purpose: Twilio inbound/outbound SMS.
 - Secrets events: metadata-only payloads emitted on `greentic.secrets.put` for resolved tokens and `greentic.secrets.missing.detected` when the token is absent.
 - Packs: `packs/events/sms.yaml`.
 - Flows: `packs/events-sms/flows/in_default.ygtc`, `packs/events-sms/flows/out_default.ygtc`.
+
+## Setup
+
+- Entry flow: `setup` (collect → validate → apply → summary).
+- Required inputs: `twilio.account_sid`, `twilio.from_number`, `twilio.webhook_path`, `public_base_url`.
+- Required secrets: `TWILIO_AUTH_TOKEN`.
+- Dry-run plan: emits webhook ops for the inbound Twilio callback URL.

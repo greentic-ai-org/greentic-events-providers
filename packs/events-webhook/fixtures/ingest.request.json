@@ -1,0 +1,10 @@
+{
+  "method": "POST",
+  "path": "/ingest",
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": {
+    "event": "ping"
+  }
+}

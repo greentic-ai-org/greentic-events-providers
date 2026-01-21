@@ -1,0 +1,10 @@
+{
+  "requirements": {
+    "config_keys": [
+      "schedules"
+    ],
+    "secret_keys": [],
+    "webhook_required": false,
+    "subscriptions_required": false
+  }
+}

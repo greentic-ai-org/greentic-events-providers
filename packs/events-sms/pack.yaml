@@ -7,6 +7,12 @@ description: Greentic SMS event providers (Twilio)
 authors:
   - Greentic Engineering <engineering@greentic.dev>
 license: MIT
+meta:
+  entry_flows:
+    setup: setup
+    requirements: requirements
+  requires_public_base_url: true
+  capabilities: []
 components:
   - id: events-sms-source
     version: 1.0.0

@@ -19,6 +19,8 @@ serde_json.workspace = true
 uuid.workspace = true
 
 [dev-dependencies]
+blake3 = "1"
 greentic-types.workspace = true
+serde_cbor = "0.11"
 zip = { version = "0.6", default-features = false, features = ["deflate"] }
 tempfile = "3"

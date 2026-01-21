@@ -1,0 +1,8 @@
+{
+  "twilio": {
+    "account_sid": "AC1234567890",
+    "from_number": "+15551234567",
+    "webhook_path": "/twilio"
+  },
+  "public_base_url": "https://example.invalid"
+}

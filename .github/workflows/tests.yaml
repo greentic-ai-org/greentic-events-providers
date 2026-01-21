@@ -43,6 +43,11 @@ jobs:
           if ! command -v greentic-pack >/dev/null 2>&1 || [[ "$(greentic-pack --version)" != greentic-pack\ ${PACK_VERSION}* ]]; then
             cargo binstall greentic-pack --force -y
           fi
+      - name: Install greentic-provision (skip if cached)
+        run: |
+          if ! command -v greentic-provision >/dev/null 2>&1; then
+            cargo binstall greentic-provision --force -y
+          fi
       - name: Local check (fmt + clippy + test + packs)
         run: PACK_DEBUG=1 ci/local_check.sh
 

@@ -1,0 +1,13 @@
+{
+  "config_patch": {},
+  "secrets_patch": {
+    "set": {},
+    "delete": []
+  },
+  "webhook_ops": [],
+  "subscription_ops": [],
+  "oauth_ops": [],
+  "notes": [
+    "dry-run: no provisioning changes"
+  ]
+}
