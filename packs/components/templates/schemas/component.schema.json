@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "templates component configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "templates": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "Handlebars template used to render the reply"
+        },
+        "output_path": {
+          "type": "string",
+          "description": "Dot path where the rendered string is stored",
+          "default": "text",
+          "x-default-applied": true
+        },
+        "wrap": {
+          "type": "boolean",
+          "description": "Wrap output in an object when true; emit a raw string when false",
+          "default": true,
+          "x-default-applied": true
+        },
+        "routing": {
+          "type": "string",
+          "description": "Optional routing target (defaults to out)"
+        }
+      },
+      "required": ["text"]
+    }
+  },
+  "required": ["templates"]
+}

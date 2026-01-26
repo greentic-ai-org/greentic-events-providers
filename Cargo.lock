@@ -2632,7 +2632,7 @@ dependencies = [
 
 [[package]]
 name = "provider-core"
-version = "0.4.8"
+version = "0.4.9"
 dependencies = [
  "chrono",
  "greentic-interfaces-guest",
@@ -2648,7 +2648,7 @@ dependencies = [
 
 [[package]]
 name = "provider-email"
-version = "0.4.8"
+version = "0.4.9"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -2667,7 +2667,7 @@ dependencies = [
 
 [[package]]
 name = "provider-sms"
-version = "0.4.8"
+version = "0.4.9"
 dependencies = [
  "base64 0.22.1",
  "chrono",
@@ -2685,7 +2685,7 @@ dependencies = [
 
 [[package]]
 name = "provider-timer"
-version = "0.4.8"
+version = "0.4.9"
 dependencies = [
  "chrono",
  "greentic-interfaces-guest",
@@ -2700,7 +2700,7 @@ dependencies = [
 
 [[package]]
 name = "provider-webhook"
-version = "0.4.8"
+version = "0.4.9"
 dependencies = [
  "anyhow",
  "greentic-interfaces-guest",
@@ -3241,7 +3241,7 @@ dependencies = [
 
 [[package]]
 name = "sbom-patch"
-version = "0.4.8"
+version = "0.4.9"
 dependencies = [
  "anyhow",
  "blake3",

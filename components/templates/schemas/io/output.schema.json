@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "component-templates handle output",
+  "type": "object",
+  "properties": {
+    "text": {
+      "type": "string",
+      "description": "Rendered Handlebars output (default path)"
+    },
+    "control": {
+      "type": "object",
+      "description": "Optional control routing payload (routing target defaults to out)",
+      "properties": {
+        "routing": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "error": {
+      "type": "object",
+      "description": "Optional error payload populated when rendering fails",
+      "properties": {
+        "kind": { "type": "string" },
+        "message": { "type": "string" },
+        "details": { "type": "object" }
+      },
+      "required": ["kind", "message"]
+    }
+  }
+}

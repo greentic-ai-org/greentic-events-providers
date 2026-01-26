@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "component-templates invocation input",
+  "type": "object",
+  "properties": {
+    "config": {
+      "type": "object",
+      "description": "Template configuration (see component schema)",
+      "default": {
+        "templates": {
+          "text": "Hello {{name}}"
+        }
+      },
+      "properties": {
+        "templates": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "text": { "type": "string" },
+            "output_path": { "type": "string" },
+            "wrap": { "type": "boolean" },
+            "routing": { "type": "string" }
+          },
+          "required": ["text"]
+        }
+      },
+      "required": ["templates"],
+      "additionalProperties": false
+    },
+    "msg": {
+      "type": "object",
+      "description": "Channel message envelope forwarded to the template context",
+      "default": {}
+    },
+    "payload": {
+      "type": ["object", "array", "string", "number", "boolean", "null"],
+      "description": "Incoming node payload exposed to the template context",
+      "default": {}
+    },
+    "connections": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Downstream connections (not used by this component)"
+    }
+  },
+  "required": ["config", "msg", "payload"]
+}

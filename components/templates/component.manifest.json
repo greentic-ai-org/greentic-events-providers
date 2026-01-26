@@ -1,0 +1,168 @@
+{
+  "$schema": "https://greentic-ai.github.io/greentic-component/schemas/v1/component.manifest.schema.json",
+  "artifacts": {
+    "component_wasm": "target/wasm32-wasip2/release/component_templates.wasm"
+  },
+  "capabilities": {
+    "host": {
+      "messaging": {
+        "inbound": true,
+        "outbound": true
+      },
+      "secrets": {
+        "required": []
+      },
+      "telemetry": {
+        "scope": "node"
+      }
+    },
+    "wasi": {
+      "clocks": true,
+      "filesystem": {
+        "mode": "none",
+        "mounts": []
+      },
+      "random": true
+    }
+  },
+  "config_schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "templates": {
+        "additionalProperties": false,
+        "properties": {
+          "output_path": {
+            "default": "text",
+            "description": "Dot path where the rendered string is stored",
+            "type": "string",
+            "x-default-applied": true
+          },
+          "routing": {
+            "description": "Optional routing target (defaults to out)",
+            "type": "string"
+          },
+          "text": {
+            "description": "Handlebars template used to render the reply",
+            "type": "string"
+          },
+          "wrap": {
+            "default": true,
+            "description": "Wrap output in an object when true; emit a raw string when false",
+            "type": "boolean",
+            "x-default-applied": true
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      }
+    },
+    "required": [
+      "templates"
+    ],
+    "title": "templates component configuration",
+    "type": "object"
+  },
+  "default_operation": "text",
+  "describe_export": "get-manifest",
+  "dev_flows": {
+    "custom": {
+      "format": "flow-ir-json",
+      "graph": {
+        "description": "Auto-generated custom config for ai.greentic.component-templates",
+        "id": "ai.greentic.component-templates.custom",
+        "kind": "component-config",
+        "nodes": {
+          "ask_config": {
+            "questions": {
+              "fields": [
+                {
+                  "default": {
+                    "templates": {
+                      "text": "Hello {{name}}"
+                    }
+                  },
+                  "id": "config",
+                  "prompt": "Template configuration (see component schema)",
+                  "type": "string"
+                },
+                {
+                  "id": "connections",
+                  "prompt": "Downstream connections (not used by this component)",
+                  "type": "string"
+                },
+                {
+                  "default": {},
+                  "id": "msg",
+                  "prompt": "Channel message envelope forwarded to the template context",
+                  "type": "string"
+                },
+                {
+                  "default": {},
+                  "id": "payload",
+                  "prompt": "Incoming node payload exposed to the template context",
+                  "type": "string"
+                }
+              ]
+            },
+            "routing": [
+              {
+                "to": "emit_config"
+              }
+            ]
+          },
+          "emit_config": {
+            "template": "{\n  \"node_id\": \"templates\",\n  \"node\": {\n    \"text\": {\n      \"input\": {\n        \"config\": \"{{state.config}}\",\n        \"connections\": \"{{state.connections}}\",\n        \"msg\": \"{{state.msg}}\",\n        \"payload\": \"{{state.payload}}\"\n      }\n    },\n    \"routing\": [\n      { \"to\": \"NEXT_NODE_PLACEHOLDER\" }\n    ]\n  }\n}"
+          }
+        }
+      }
+    },
+    "default": {
+      "format": "flow-ir-json",
+      "graph": {
+        "description": "Auto-generated default config for ai.greentic.component-templates",
+        "id": "ai.greentic.component-templates.default",
+        "kind": "component-config",
+        "nodes": {
+          "emit_config": {
+            "template": "{\n  \"node_id\": \"templates\",\n  \"node\": {\n    \"text\": {\n      \"input\": {\n        \"config\": {\"templates\":{\"text\":\"Hello {{name}}\"}},\n        \"msg\": {},\n        \"payload\": {}\n      }\n    },\n    \"routing\": [\n      { \"to\": \"NEXT_NODE_PLACEHOLDER\" }\n    ]\n  }\n}"
+          }
+        }
+      }
+    }
+  },
+  "hashes": {
+    "component_wasm": "blake3:11ff50b854352de83f8bf04851b9371c9f38201ae1a967ef57edea7a5735863c"
+  },
+  "id": "ai.greentic.component-templates",
+  "limits": {
+    "memory_mb": 128,
+    "wall_time_ms": 1000
+  },
+  "name": "templates",
+  "operations": [
+    {
+      "input_schema": {
+        "$ref": "schemas/io/input.schema.json"
+      },
+      "name": "text",
+      "output_schema": {
+        "$ref": "schemas/io/output.schema.json"
+      }
+    }
+  ],
+  "profiles": {
+    "default": "stateless",
+    "supported": [
+      "stateless"
+    ]
+  },
+  "secret_requirements": [],
+  "supports": [
+    "messaging"
+  ],
+  "version": "0.1.0",
+  "world": "greentic:component/component@0.5.0"
+}
