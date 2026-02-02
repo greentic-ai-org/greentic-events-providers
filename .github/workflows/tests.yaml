@@ -29,11 +29,8 @@ jobs:
           components: rustfmt, clippy
       - name: Install wasm32-wasip2 target
         run: rustup target add wasm32-wasip2 --toolchain "${RUSTUP_TOOLCHAIN}"
-      - name: Install cargo-binstall (skip if cached)
-        run: |
-          if ! command -v cargo-binstall >/dev/null 2>&1; then
-            cargo install cargo-binstall --force --locked
-          fi
+      - name: Install cargo-binstall
+        uses: cargo-bins/cargo-binstall@main
       - name: Show toolchain/targets
         run: |
           rustup show active-toolchain
