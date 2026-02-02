@@ -9,13 +9,6 @@ use serde_json::{Value, json};
 use std::collections::BTreeMap;
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct ProviderDescribe {
-    provider_type: String,
-    capabilities: Value,
-    ops: Vec<String>,
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 struct ProviderConfig {
     target_url: String,
@@ -46,16 +39,16 @@ struct Component;
 
 impl provider_core::Guest for Component {
     fn describe() -> Vec<u8> {
-        let describe = ProviderDescribe {
-            provider_type: "events.webhook".into(),
-            capabilities: json!({
+        serde_json::to_vec(&json!({
+            "provider_type": "events.webhook",
+            "capabilities": {
                 "operations": ["publish"],
                 "transport": "http",
                 "deterministic": true,
-            }),
-            ops: vec!["publish".into()],
-        };
-        serde_json::to_vec(&describe).unwrap_or_default()
+            },
+            "ops": ["publish"],
+        }))
+        .unwrap_or_default()
     }
 
     fn validate_config(config_json: Vec<u8>) -> Vec<u8> {

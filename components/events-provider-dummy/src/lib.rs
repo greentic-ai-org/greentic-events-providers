@@ -4,33 +4,25 @@ use anyhow::Result;
 use greentic_interfaces_guest::provider_core;
 #[cfg(target_arch = "wasm32")]
 use greentic_interfaces_guest::state_store;
-use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 #[cfg(not(target_arch = "wasm32"))]
 use std::sync::{Mutex, OnceLock};
 use uuid::Uuid;
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct ProviderDescribe {
-    provider_type: String,
-    capabilities: Value,
-    ops: Vec<String>,
-}
 
 #[allow(dead_code)]
 struct Component;
 
 impl provider_core::Guest for Component {
     fn describe() -> Vec<u8> {
-        let describe = ProviderDescribe {
-            provider_type: "events.dummy".into(),
-            capabilities: json!({
+        serde_json::to_vec(&json!({
+            "provider_type": "events.dummy",
+            "capabilities": {
                 "operations": ["publish", "echo"],
                 "deterministic": true,
-            }),
-            ops: vec!["publish".into(), "echo".into()],
-        };
-        serde_json::to_vec(&describe).unwrap_or_default()
+            },
+            "ops": ["publish", "echo"],
+        }))
+        .unwrap_or_default()
     }
 
     fn validate_config(config_json: Vec<u8>) -> Vec<u8> {

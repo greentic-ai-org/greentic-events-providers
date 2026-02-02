@@ -3,6 +3,8 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${ROOT_DIR}"
+RUSTUP_TOOLCHAIN="${RUSTUP_TOOLCHAIN:-1.90.0}"
+export RUSTUP_TOOLCHAIN
 
 echo "==> cargo fmt"
 cargo fmt --all -- --check

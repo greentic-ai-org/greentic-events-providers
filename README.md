@@ -24,7 +24,7 @@ Reusable Greentic event providers shipped as WASM components plus packs for `gre
 - `.github/workflows/publish-latest-packs.yaml` – publishes latest `*.gtpack` artifacts to GHCR on main.
 
 ## Versioning & constraints
-- Rust edition 2024, MSRV 1.89.
+- Rust edition 2024, MSRV 1.90.
 - Depends on greentic crates at `0.4`.
 - Components avoid hosting HTTP/timers; hosts feed requests/ticks into the WASM modules.
 

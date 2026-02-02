@@ -12,7 +12,7 @@ jobs:
   unit:
     runs-on: ubuntu-latest
     env:
-      RUSTUP_TOOLCHAIN: 1.89.0
+      RUSTUP_TOOLCHAIN: 1.90.0
       PACK_VERSION: "0.4"
     steps:
       - uses: actions/checkout@v4
@@ -24,7 +24,7 @@ jobs:
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.89.0
+          toolchain: 1.90.0
           override: true
           components: rustfmt, clippy
       - name: Install wasm32-wasip2 target
@@ -75,7 +75,7 @@ jobs:
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.89.0
+          toolchain: 1.90.0
           override: true
       - name: Run live tests (skips internally if secrets missing)
         run: |

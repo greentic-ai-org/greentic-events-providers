@@ -12,13 +12,6 @@ use std::collections::BTreeMap;
 use std::sync::{Mutex, OnceLock};
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct ProviderDescribe {
-    provider_type: String,
-    capabilities: Value,
-    ops: Vec<String>,
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 struct ProviderConfig {
     #[serde(default = "default_timezone")]
@@ -45,16 +38,16 @@ struct Component;
 
 impl provider_core::Guest for Component {
     fn describe() -> Vec<u8> {
-        let describe = ProviderDescribe {
-            provider_type: "events.timer".into(),
-            capabilities: json!({
+        serde_json::to_vec(&json!({
+            "provider_type": "events.timer",
+            "capabilities": {
                 "operations": ["publish"],
                 "persistence": "state-store",
                 "deterministic": true,
-            }),
-            ops: vec!["publish".into()],
-        };
-        serde_json::to_vec(&describe).unwrap_or_default()
+            },
+            "ops": ["publish"],
+        }))
+        .unwrap_or_default()
     }
 
     fn validate_config(config_json: Vec<u8>) -> Vec<u8> {
