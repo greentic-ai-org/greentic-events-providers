@@ -1,1 +1,0 @@
-/Users/maarten/Documents/GitHub/agentic/greentic-events-providers/components/events-provider-sms-twilio/target/wasm32-wasip2/release/libevents_provider_sms_twilio.rlib: /Users/maarten/Documents/GitHub/agentic/greentic-events-providers/components/events-provider-sms-twilio/src/lib.rs

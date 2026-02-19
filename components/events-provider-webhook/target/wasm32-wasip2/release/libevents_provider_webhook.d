@@ -1,1 +1,0 @@
-/Users/maarten/Documents/GitHub/agentic/greentic-events-providers/components/events-provider-webhook/target/wasm32-wasip2/release/libevents_provider_webhook.rlib: /Users/maarten/Documents/GitHub/agentic/greentic-events-providers/components/events-provider-webhook/src/lib.rs
