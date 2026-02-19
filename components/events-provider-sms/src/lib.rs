@@ -1,6 +1,7 @@
 #![deny(unsafe_op_in_unsafe_fn)]
 
 use anyhow::{Context, Result};
+use chrono::Utc;
 use greentic_interfaces_guest::provider_core;
 #[cfg(target_arch = "wasm32")]
 use greentic_interfaces_guest::state_store;
@@ -22,10 +23,22 @@ struct ProviderConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-struct PublishInput {
+struct SmsInput {
     config: ProviderConfig,
     #[serde(default)]
     event: Value,
+    #[serde(default)]
+    http: Option<Value>,
+    #[serde(default)]
+    raw: Option<Value>,
+    #[serde(default)]
+    handler_id: Option<String>,
+    #[serde(default)]
+    tenant: Option<String>,
+    #[serde(default)]
+    team: Option<String>,
+    #[serde(default)]
+    correlation_id: Option<String>,
 }
 
 #[allow(dead_code)]
@@ -36,11 +49,11 @@ impl provider_core::Guest for Component {
         serde_json::to_vec(&json!({
             "provider_type": "events.sms",
             "capabilities": {
-                "operations": ["publish"],
+                "operations": ["ingest_http", "publish"],
                 "persistence": "state-store",
                 "deterministic": true,
             },
-            "ops": ["publish"],
+            "ops": ["ingest_http", "publish"],
         }))
         .unwrap_or_default()
     }
@@ -122,27 +135,52 @@ mod exports {
 
 #[allow(dead_code)]
 fn handle_invoke(op: &str, input_json: &[u8]) -> Result<Vec<u8>> {
-    let parsed: PublishInput = serde_json::from_slice(input_json)
-        .with_context(|| "publish input must include config and event")?;
+    let parsed: SmsInput = serde_json::from_slice(input_json)
+        .with_context(|| "ingest input must include config and event")?;
     match op {
-        "publish" => handle_publish(&parsed),
+        "ingest_http" | "publish" => handle_ingest_http(&parsed),
         other => anyhow::bail!("unsupported op {other}"),
     }
 }
 
 #[allow(dead_code)]
-fn handle_publish(input: &PublishInput) -> Result<Vec<u8>> {
+fn handle_ingest_http(input: &SmsInput) -> Result<Vec<u8>> {
     if input.config.messaging_provider_id.trim().is_empty() {
         anyhow::bail!("messaging_provider_id is required");
     }
     let receipt_id = stable_receipt_id(&input.event);
     let key = state_key(&input.config, &receipt_id);
     persist_request(&key, input)?;
+    let now = Utc::now().to_rfc3339();
+
+    let mut emitted_event = json!({
+        "event_id": receipt_id,
+        "event_type": "sms.received",
+        "occurred_at": now,
+        "source": {
+            "domain": "events",
+            "provider": "events.sms",
+            "handler_id": input.handler_id.clone().unwrap_or_else(|| "default".to_string()),
+        },
+        "scope": {
+            "tenant": input.tenant.clone().unwrap_or_else(|| "default".to_string()),
+            "team": input.team,
+            "correlation_id": input.correlation_id,
+        },
+        "payload": input.event,
+    });
+    if let Some(http) = &input.http {
+        emitted_event["http"] = http.clone();
+    }
+    if let Some(raw) = &input.raw {
+        emitted_event["raw"] = raw.clone();
+    }
 
     Ok(json!({
         "receipt_id": receipt_id,
         "status": "queued",
         "state_key": key,
+        "emitted_events": [emitted_event],
     })
     .to_string()
     .into_bytes())
@@ -169,7 +207,7 @@ fn stable_receipt_id(event: &Value) -> String {
     Uuid::new_v5(&Uuid::NAMESPACE_OID, &bytes).to_string()
 }
 
-fn persist_request(key: &str, input: &PublishInput) -> Result<()> {
+fn persist_request(key: &str, input: &SmsInput) -> Result<()> {
     let queued = QueuedSms {
         messaging_provider_id: input.config.messaging_provider_id.clone(),
         from: input.config.from.clone(),
@@ -214,14 +252,20 @@ mod tests {
     use std::path::Path;
     use std::process::Command;
 
-    fn sample_input() -> PublishInput {
-        PublishInput {
+    fn sample_input() -> SmsInput {
+        SmsInput {
             config: ProviderConfig {
                 messaging_provider_id: "messaging.sms.provider".into(),
                 from: Some("+15550001".into()),
                 persistence_key_prefix: None,
             },
             event: json!({"to": "+15559999", "body": "hello"}),
+            http: None,
+            raw: None,
+            handler_id: Some("sms-main".into()),
+            tenant: Some("tenant-a".into()),
+            team: Some("team-1".into()),
+            correlation_id: Some("corr-123".into()),
         }
     }
 
@@ -234,9 +278,9 @@ mod tests {
     }
 
     #[test]
-    fn publish_writes_state_host() {
+    fn ingest_http_writes_state_host_and_envelope() {
         let input = sample_input();
-        let out = handle_publish(&input).expect("publish");
+        let out = handle_ingest_http(&input).expect("ingest_http");
         let json: Value = serde_json::from_slice(&out).expect("json");
         let key = json
             .get("state_key")
@@ -245,6 +289,14 @@ mod tests {
         let stored = host_read(key).expect("stored entry");
         let entry: QueuedSms = serde_json::from_slice(&stored).expect("queued");
         assert_eq!(entry.messaging_provider_id, "messaging.sms.provider");
+        assert_eq!(
+            json.get("emitted_events")
+                .and_then(|v| v.as_array())
+                .and_then(|arr| arr.first())
+                .and_then(|v| v.get("event_type"))
+                .and_then(|v| v.as_str()),
+            Some("sms.received")
+        );
     }
 
     #[test]

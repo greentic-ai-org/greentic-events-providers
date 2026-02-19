@@ -21,18 +21,26 @@ PACKS=(
   "events-dummy"
 )
 
-declare -A PACK_IDS=(
-  ["events-email"]="greentic.events.email"
-  ["events-sms"]="greentic.events.sms"
-  ["events-webhook"]="greentic.events.webhook"
-  ["events-timer"]="greentic.events.timer"
-  ["events-dummy"]="greentic.events.provider.dummy"
-)
+pack_id_for() {
+  case "$1" in
+    events-email) echo "greentic.events.email" ;;
+    events-sms) echo "greentic.events.sms" ;;
+    events-webhook) echo "greentic.events.webhook" ;;
+    events-timer) echo "greentic.events.timer" ;;
+    events-dummy) echo "greentic.events.provider.dummy" ;;
+    *)
+      echo "Unknown pack id mapping for $1" >&2
+      exit 1
+      ;;
+  esac
+}
 
-declare -A REQUIRES_BASE_URL=(
-  ["events-sms"]="true"
-  ["events-webhook"]="true"
-)
+requires_base_url_for() {
+  case "$1" in
+    events-sms|events-webhook) echo "true" ;;
+    *) echo "false" ;;
+  esac
+}
 
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "${TMP_DIR}"' EXIT
@@ -124,19 +132,24 @@ PY
     exit 1
   fi
 
-  base_url_args=()
-  if [ "${REQUIRES_BASE_URL[$pack]-false}" = "true" ]; then
-    base_url_args=(--public-base-url "https://example.invalid")
-  fi
-
   output_path="${TMP_DIR}/${pack}.json"
-  greentic-provision dry-run setup \
-    --pack "${pack_dir}" \
-    --provider-id "${PACK_IDS[$pack]}" \
-    --install-id "${PACK_IDS[$pack]}-fixture" \
-    "${base_url_args[@]}" \
-    --answers "${answers}" \
-    --json > "${output_path}"
+  provider_id="$(pack_id_for "${pack}")"
+  if [ "$(requires_base_url_for "${pack}")" = "true" ]; then
+    greentic-provision dry-run setup \
+      --pack "${pack_dir}" \
+      --provider-id "${provider_id}" \
+      --install-id "${provider_id}-fixture" \
+      --public-base-url "https://example.invalid" \
+      --answers "${answers}" \
+      --json > "${output_path}"
+  else
+    greentic-provision dry-run setup \
+      --pack "${pack_dir}" \
+      --provider-id "${provider_id}" \
+      --install-id "${provider_id}-fixture" \
+      --answers "${answers}" \
+      --json > "${output_path}"
+  fi
 
   actual_path="${TMP_DIR}/${pack}.plan.json"
   expected_path="${TMP_DIR}/${pack}.expected.json"

@@ -1,0 +1,187 @@
+pack_id: greentic.events.sms.twilio
+version: 0.1.0
+kind: application
+publisher: greentic
+name: greentic.events.sms.twilio
+description: Greentic SMS event providers (Twilio)
+authors:
+  - Greentic Engineering <engineering@greentic.dev>
+license: MIT
+meta:
+  entry_flows:
+    setup: setup
+    requirements: requirements
+  requires_public_base_url: true
+  capabilities: []
+components:
+  - id: events-sms-source
+    version: 1.0.0
+    world: greentic:events/source@1.0.0
+    supports:
+      - event
+    profiles:
+      default: stateless
+      supported:
+        - stateless
+    capabilities:
+      wasi:
+        clocks: true
+      host:
+        secrets:
+          required:
+            - key: TWILIO_AUTH_TOKEN
+              required: true
+              description: Auth token used to validate Twilio webhook signatures
+              scope:
+                env: "{{env}}"
+                tenant: "{{tenant}}"
+              format: text
+        events:
+          inbound: false
+          outbound: true
+        http:
+          server: true
+    wasm: components/stubs/events-sms-source.wasm
+  - id: events-sms-sink
+    version: 1.0.0
+    world: greentic:events/sink@1.0.0
+    supports:
+      - event
+    profiles:
+      default: stateless
+      supported:
+        - stateless
+    capabilities:
+      wasi:
+        clocks: true
+      host:
+        secrets:
+          required:
+            - key: TWILIO_AUTH_TOKEN
+              required: true
+              description: Auth token used to sign Twilio REST requests
+              scope:
+                env: "{{env}}"
+                tenant: "{{tenant}}"
+              format: text
+        events:
+          inbound: true
+          outbound: false
+        http:
+          client: true
+    wasm: components/stubs/events-sms-sink.wasm
+  - id: events-provider-sms-twilio
+    version: 0.1.0
+    world: root:component/root
+    supports:
+      - messaging
+    profiles:
+      default: default
+      supported:
+        - default
+    capabilities:
+      wasi:
+        random: false
+        clocks: false
+      host: {}
+    wasm: components/events-provider-sms-twilio.wasm
+  - id: templating.handlebars
+    version: 0.1.0
+    world: greentic:flow/templating@1.0.0
+    supports:
+      - messaging
+    profiles:
+      default: stateless
+      supported:
+        - stateless
+    capabilities:
+      wasi:
+        clocks: true
+        random: true
+        filesystem:
+          mode: none
+          mounts: []
+      host:
+        messaging:
+          inbound: false
+          outbound: false
+        secrets:
+          required: []
+        telemetry:
+          scope: node
+    wasm: components/templating.handlebars/stub.wasm
+flows:
+  - id: sms-in-default
+    file: flows/in_default.ygtc
+    entrypoints:
+      - sms-in-default
+  - id: sms-out-default
+    file: flows/out_default.ygtc
+    entrypoints:
+      - sms-out-default
+  - id: setup-default
+    file: flows/setup_default.ygtc
+    entrypoints:
+      - setup-default
+  - id: setup-custom
+    file: flows/setup_custom.ygtc
+    entrypoints:
+      - setup-custom
+  - id: update
+    file: flows/update.ygtc
+    entrypoints:
+      - update
+  - id: remove
+    file: flows/remove.ygtc
+    entrypoints:
+      - remove
+schemas:
+  - path: schemas/events/sms/config.schema.json
+assets:
+  - path: schemas/events/sms/README.md
+events:
+  providers:
+    - name: "sms-in-twilio"
+      kind: "source"
+      component: "events-sms-source@1.0.0"
+      capabilities:
+        transport: "twilio"
+        reliability: "at_least_once"
+        topics:
+          - "sms.in.twilio.*"
+    - name: "sms-out-twilio"
+      kind: "sink"
+      component: "events-sms-sink@1.0.0"
+      capabilities:
+        transport: "twilio"
+        reliability: "at_least_once"
+        topics:
+          - "sms.out.twilio"
+extensions:
+  greentic.provider-extension.v1:
+    kind: greentic.provider-extension.v1
+    version: 1.0.0
+    inline:
+      providers:
+        - provider_type: events.sms.twilio
+          capabilities:
+            - ingest_http
+            - send_sms
+          ops:
+            - ingest_http
+            - send_sms
+          config_schema_ref: schemas/events/sms/config.schema.json
+          runtime:
+            component_ref: events-provider-sms-twilio
+            export: schema-core
+            world: greentic:provider/schema-core@1.0.0
+          docs_ref: assets/schemas/events/sms/README.md
+  greentic.events.ingress-http.v1:
+    kind: greentic.events.ingress-http.v1
+    version: 1.0.0
+    inline:
+      handlers:
+        - handler_id: sms-twilio-default
+          method: POST
+          path: /v1/events/ingress/sms.twilio/{tenant}/{team}/{handler}
+          op_id: ingest_http

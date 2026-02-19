@@ -49,7 +49,7 @@ components:
       events:
         inbound: false
         outbound: true
-  wasm: components/stub.wasm
+  wasm: components/stubs/events-email-source.wasm
 - id: events-email-sink
   version: 1.0.0
   world: greentic:events/sink@1.0.0
@@ -93,7 +93,7 @@ components:
       http:
         client: true
         server: false
-  wasm: components/stub.wasm
+  wasm: components/stubs/events-email-sink.wasm
 - id: events-provider-dummy
   version: 0.1.0
   world: root:component/root
@@ -170,7 +170,7 @@ components:
     host: {}
   wasm: components/events-provider-webhook.wasm
 - id: templating.handlebars
-  version: 0.0.1
+  version: 0.1.0
   world: greentic:flow/templating@1.0.0
   supports:
   - messaging

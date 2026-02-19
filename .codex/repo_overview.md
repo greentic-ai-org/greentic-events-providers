@@ -1,54 +1,68 @@
 # Repository Overview
 
 ## 1. High-Level Purpose
-- Provides reusable Greentic event provider components (webhook, email via MS Graph/Gmail, SMS via Twilio, timer) compiled to WASM implementing `greentic:events@1.0.0`, plus YAML packs and example flows for discovery/deployment with greentic-events and greentic-deployer.
-- Written in Rust 2024 with shared helper crate; packs/flows are declarative YAML/YGTC placeholders; CI scripts build packs via `packc`.
+- Hosts reusable Greentic events providers as Rust/WASM components plus deployable packs for `greentic-events` and `greentic-deployer`.
+- Covers provider families: webhook, email (MS Graph/Gmail), SMS (Twilio), timer, plus a deterministic dummy provider for CI/integration flows.
+- Uses Rust 2024 (workspace MSRV/toolchain 1.90) and Greentic `0.4` ecosystem crates.
 
 ## 2. Main Components and Functionality
-- **Path:** crates/provider-core  
-  **Role:** Shared utilities for all providers.  
-  **Key functionality:** HTTP/timer config models; error type; helpers to build `EventEnvelope`s with defaults and idempotency keys; tenant secret key helpers.  
-  **Key dependencies / integration points:** Depends on `greentic-types` for event and tenant contexts.
+- **Path:** `crates/provider-core`
+  **Role:** Shared domain and secrets utilities.
+  **Key functionality:** Common configs/errors/event helpers; tenant-scoped secret key helpers; secrets-store abstraction (`SecretProvider`) and standardized metadata-only secret events (`greentic.secrets.put|delete|rotate.*|missing.detected`).
 
-- **Path:** crates/provider-webhook  
-  **Role:** Webhook source/sink mappings.  
-  **Key functionality:** Maps inbound HTTP requests (`InboundHttpRequest`) to events using configured routes; copies headers into metadata; records host-provided signature validation state; builds outbound webhook requests (`OutgoingWebhookRequest`) with correlation headers.  
-  **Key dependencies / integration points:** Uses `provider-core` event helpers; expects host to serve HTTP and perform any required signature validation.
+- **Path:** `crates/provider-webhook`
+  **Role:** Webhook source/sink mapping logic.
+  **Key functionality:** Maps inbound HTTP requests into event envelopes, route/topic resolution, metadata propagation, optional signing-secret resolution via secrets-store, and outbound webhook request building.
 
-- **Path:** crates/provider-email  
-  **Role:** Email source/sink mappings for MS Graph and Gmail.  
-  **Key functionality:** Maps inbound emails to events with provider-specific topics; builds provider-specific send payloads from outbound events, validating required fields and detecting provider from topic.  
-  **Key dependencies / integration points:** Uses `provider-core` for event creation; aligns with MS Graph/Gmail payload schemas.
+- **Path:** `crates/provider-email`
+  **Role:** Email source/sink mapping logic (MS Graph + Gmail).
+  **Key functionality:** Inbound email to event mapping, outbound provider detection from topics, send-request construction, and provider secret resolution/secret event emission.
 
-- **Path:** crates/provider-sms  
-  **Role:** Twilio SMS source/sink mappings.  
-  **Key functionality:** Converts Twilio webhook payloads to inbound events with alias-based topics and metadata (host indicates signature validation); builds Twilio send requests from outbound events including account URL and form body.  
-  **Key dependencies / integration points:** Uses `provider-core`; assumes host handles webhook signature validation/auth token resolution.
+- **Path:** `crates/provider-sms`
+  **Role:** Twilio SMS source/sink mapping logic.
+  **Key functionality:** Twilio webhook payload to event mapping, outbound Twilio send request construction, auth-token resolution through secrets-store, and missing-secret event emission.
 
-- **Path:** crates/provider-timer  
-  **Role:** Timer/cron source logic.  
-  **Key functionality:** Fires configured schedules into events, embedding schedule info in metadata.  
-  **Key dependencies / integration points:** Uses `provider-core` scheduler models and event helper.
+- **Path:** `crates/provider-timer`
+  **Role:** Scheduler/timer source logic.
+  **Key functionality:** Fires configured schedules into events with deterministic payload/metadata wiring.
 
-- **Path:** packs/events/*.yaml  
-  **Role:** Pack definitions for greentic-events/deployer.  
-  **Key functionality:** Declare provider components, capabilities, and referenced flow files for webhook, email, SMS, and timer families.
+- **Path:** `components/events-provider-*`
+  **Role:** Provider-core WASM component crates for deployable provider types.
+  **Key functionality:** Implement provider-core world operations (`describe`, `validate-config`, `healthcheck`, `invoke`), including deterministic `publish` behavior and host state writes for dummy/email/sms/timer components.
 
-- **Path:** flows/events/*/*.ygtc  
-  **Role:** Example/default flows for each provider family.  
-  **Key functionality:** Messaging flows describing expected inputs/outputs for webhook, email, SMS, and timer providers with concrete routing/validation steps (signature checks, folder/alias branching, throttling, fan-out), ready for customization.
+- **Path:** `crates/sbom-patch`
+  **Role:** Build helper binary.
+  **Key functionality:** Patches generated pack SBOM/manifests with schema artifacts after `greentic-pack build`.
 
-- **Path:** docs/*.md  
-  **Role:** Human-oriented docs for repository overview and provider-specific notes.
+- **Path:** `packs/events-*`
+  **Role:** Pack sources and generated setup artifacts.
+  **Key functionality:** Pack definitions for `events-email`, `events-sms`, `events-webhook`, `events-timer`, and `events-dummy`, including schemas, fixtures, setup WAT outputs, and flow files (`*.ygtc`, resolved JSON summaries).
 
-- **Path:** scripts/build_packs.sh, ci/local_check.sh  
-  **Role:** Helper scripts to build/validate packs and run fmt/clippy/tests mirroring CI.
+- **Path:** `packs/components`
+  **Role:** Shared component assets consumed by pack builds.
+  **Key functionality:** Built provider WASM artifacts, template manifests/schemas, and stub/template helper WASM used by pack flow templates.
+
+- **Path:** `fixtures/packs/*`
+  **Role:** Deterministic pack fixtures for tests.
+  **Key functionality:** Fixture lockfiles/artifacts for provider packs and a `secrets_events_smoke` fixture validating secret requirements/events behavior.
+
+- **Path:** `scripts/build_packs.sh`, `scripts/provision_conformance.sh`, `scripts/publish_packs_oci.sh`, `ci/local_check.sh`
+  **Role:** Local CI/build/release orchestration.
+  **Key functionality:** Build all packs with `greentic-pack`, run provisioning conformance diffs against fixtures, and publish OCI pack artifacts.
+
+- **Path:** `.github/workflows/tests.yaml`, `.github/workflows/publish_packs.yml`
+  **Role:** CI and release automation.
+  **Key functionality:** Unit/lint/test/pack/provisioning checks, optional live integration tests via env-gated secrets, and GHCR pack publishing.
 
 ## 3. Work In Progress, TODOs, and Stubs
-- None noted; flows provide ready-to-customize defaults.
+- Pack flow templates intentionally include stub components (`packs/components/stub.wasm`, `packs/components/templating.handlebars/stub.wasm`) and resolved flow placeholders; these are scaffold/default wiring points rather than full bespoke business flows.
+- README still references a legacy path (`packs/events/`) while current packs live under `packs/events-*`.
 
 ## 4. Broken, Failing, or Conflicting Areas
-- None currently observed; tests and pack builds succeed.
+- No hard failures are documented in-repo.
+- Health status is primarily enforced through `ci/local_check.sh` and GitHub Actions; this overview update did not execute the full test/build pipeline in this edit pass.
 
 ## 5. Notes for Future Work
-- Flesh out flow templates with actual routing/processing logic for each provider family if more than defaults are needed.
+- Keep docs and overview in sync with actual pack/workflow paths (`packs/events-*`, current workflow filenames).
+- If flow scaffolds are promoted to production-grade defaults, replace remaining stub/template nodes with real operator chains and update fixtures accordingly.
+- Continue expanding deterministic coverage around pack metadata (`secret_requirements`, provisioning outputs, subscriptions outputs) as pack schemas evolve.

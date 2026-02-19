@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SMS events provider config",
+  "type": "object",
+  "properties": {
+    "messaging_provider_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Identifier of the messaging provider instance to use for SMS sends."
+    },
+    "from": {
+      "type": "string",
+      "description": "Optional default sender phone number."
+    },
+    "persistence_key_prefix": {
+      "type": "string",
+      "description": "Optional override for the queued request key prefix (defaults to events/sms/twilio/queued)."
+    }
+  },
+  "required": ["messaging_provider_id"],
+  "additionalProperties": false
+}

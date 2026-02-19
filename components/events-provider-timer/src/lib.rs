@@ -1,6 +1,9 @@
 #![deny(unsafe_op_in_unsafe_fn)]
 
 use anyhow::{Context, Result};
+use chrono::Utc;
+use greentic_interfaces_guest::component::node::{InvokeResult, NodeError};
+use greentic_interfaces_guest::component_entrypoint;
 use greentic_interfaces_guest::provider_core;
 #[cfg(target_arch = "wasm32")]
 use greentic_interfaces_guest::state_store;
@@ -11,6 +14,47 @@ use std::collections::BTreeMap;
 #[cfg(not(target_arch = "wasm32"))]
 use std::sync::{Mutex, OnceLock};
 use uuid::Uuid;
+
+#[cfg(target_arch = "wasm32")]
+#[used]
+#[unsafe(link_section = ".greentic.wasi")]
+static WASI_TARGET_MARKER: [u8; 13] = *b"wasm32-wasip2";
+
+component_entrypoint!({
+    manifest: crate::describe_payload,
+    invoke: crate::handle_message,
+    invoke_stream: true,
+});
+
+pub fn describe_payload() -> String {
+    serde_json::json!({
+        "component": {
+            "name": "events-provider-timer",
+            "org": "ai.greentic",
+            "version": "0.1.0",
+            "world": "greentic:component/component@0.6.0",
+            "schemas": {
+                "component": "schemas/component.schema.json",
+                "input": "schemas/io/input.schema.json",
+                "output": "schemas/io/output.schema.json"
+            }
+        }
+    })
+    .to_string()
+}
+
+pub fn handle_message(operation: String, input: String) -> InvokeResult {
+    match handle_invoke(&operation, input.as_bytes()) {
+        Ok(bytes) => InvokeResult::Ok(String::from_utf8_lossy(&bytes).into_owned()),
+        Err(err) => InvokeResult::Err(NodeError {
+            code: "invoke_error".into(),
+            message: err.to_string(),
+            retryable: false,
+            backoff_ms: None,
+            details: None,
+        }),
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 struct ProviderConfig {
@@ -27,10 +71,18 @@ fn default_timezone() -> String {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-struct PublishInput {
+struct TickInput {
     config: ProviderConfig,
     #[serde(default)]
     event: Value,
+    #[serde(default)]
+    handler_id: Option<String>,
+    #[serde(default)]
+    tenant: Option<String>,
+    #[serde(default)]
+    team: Option<String>,
+    #[serde(default)]
+    correlation_id: Option<String>,
 }
 
 #[allow(dead_code)]
@@ -41,11 +93,11 @@ impl provider_core::Guest for Component {
         serde_json::to_vec(&json!({
             "provider_type": "events.timer",
             "capabilities": {
-                "operations": ["publish"],
+                "operations": ["timer_tick", "publish"],
                 "persistence": "state-store",
                 "deterministic": true,
             },
-            "ops": ["publish"],
+            "ops": ["timer_tick", "publish"],
         }))
         .unwrap_or_default()
     }
@@ -127,24 +179,43 @@ mod exports {
 
 #[allow(dead_code)]
 fn handle_invoke(op: &str, input_json: &[u8]) -> Result<Vec<u8>> {
-    let parsed: PublishInput = serde_json::from_slice(input_json)
-        .with_context(|| "publish input must include config and event")?;
+    let parsed: TickInput = serde_json::from_slice(input_json)
+        .with_context(|| "timer_tick input must include config and event")?;
     match op {
-        "publish" => handle_publish(&parsed),
+        "timer_tick" | "publish" => handle_timer_tick(&parsed),
         other => anyhow::bail!("unsupported op {other}"),
     }
 }
 
 #[allow(dead_code)]
-fn handle_publish(input: &PublishInput) -> Result<Vec<u8>> {
+fn handle_timer_tick(input: &TickInput) -> Result<Vec<u8>> {
     let receipt_id = stable_receipt_id(&input.event);
     let key = state_key(&input.config, &receipt_id);
     persist_schedule(&key, &input.event)?;
+    let now = Utc::now().to_rfc3339();
+
+    let emitted_event = json!({
+        "event_id": receipt_id,
+        "event_type": "timer.tick",
+        "occurred_at": now,
+        "source": {
+            "domain": "events",
+            "provider": "events.timer",
+            "handler_id": input.handler_id.clone().unwrap_or_else(|| "default".to_string()),
+        },
+        "scope": {
+            "tenant": input.tenant.clone().unwrap_or_else(|| "default".to_string()),
+            "team": input.team,
+            "correlation_id": input.correlation_id,
+        },
+        "payload": input.event,
+    });
 
     Ok(json!({
         "receipt_id": receipt_id,
         "status": "queued",
         "state_key": key,
+        "emitted_events": [emitted_event],
     })
     .to_string()
     .into_bytes())
@@ -222,14 +293,18 @@ mod tests {
     use std::path::Path;
     use std::process::Command;
 
-    fn sample_input() -> PublishInput {
-        PublishInput {
+    fn sample_input() -> TickInput {
+        TickInput {
             config: ProviderConfig {
                 timezone: "UTC".into(),
                 default_delay_seconds: Some(30),
                 persistence_key_prefix: Some("events/timer/scheduled".into()),
             },
             event: json!({"kind": "reminder", "id": 1}),
+            handler_id: Some("nightly-reminder".into()),
+            tenant: Some("tenant-a".into()),
+            team: Some("team-1".into()),
+            correlation_id: Some("corr-123".into()),
         }
     }
 
@@ -242,9 +317,9 @@ mod tests {
     }
 
     #[test]
-    fn publish_writes_state_host() {
+    fn timer_tick_writes_state_host_and_envelope() {
         let input = sample_input();
-        let out = handle_publish(&input).expect("publish");
+        let out = handle_timer_tick(&input).expect("timer_tick");
         let json: Value = serde_json::from_slice(&out).expect("json");
         let key = json
             .get("state_key")
@@ -253,6 +328,14 @@ mod tests {
         let stored = host_read(key).expect("stored entry");
         let entry: ScheduledEntry = serde_json::from_slice(&stored).expect("scheduled");
         assert_eq!(entry.event.get("kind"), Some(&json!("reminder")));
+        assert_eq!(
+            json.get("emitted_events")
+                .and_then(|v| v.as_array())
+                .and_then(|arr| arr.first())
+                .and_then(|v| v.get("event_type"))
+                .and_then(|v| v.as_str()),
+            Some("timer.tick")
+        );
     }
 
     #[test]
@@ -265,6 +348,7 @@ mod tests {
 
         let status = Command::new("greentic-pack")
             .arg("build")
+            .arg("--allow-pack-schema")
             .arg("--no-update")
             .arg("--in")
             .arg(&pack_root)

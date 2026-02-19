@@ -1,0 +1,14 @@
+id: remove
+title: Remove
+description: Remove lifecycle flow.
+type: messaging
+start: teardown
+
+nodes:
+  teardown:
+    templating.handlebars:
+      text: |
+        Remove events-sms-twilio resources and cleanup configuration.
+        Revoke runtime dependencies and subscriptions if present.
+    routing:
+      - out: true

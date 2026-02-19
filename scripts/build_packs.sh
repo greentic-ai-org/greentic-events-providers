@@ -67,6 +67,13 @@ fi
 TMP_ROOT="$(mktemp -d)"
 trap 'rm -rf "${TMP_ROOT}"' EXIT
 
+# Some flow sidecar formats resolve local wasm as ../../components from the flow file.
+# Mirror shared components at TMP_ROOT/components so both ../components and ../../components work.
+if [ -d "${PACK_ROOT}/components" ]; then
+  mkdir -p "${TMP_ROOT}/components"
+  rsync -a "${PACK_ROOT}/components/" "${TMP_ROOT}/components/"
+fi
+
 for dir in "${PACK_DIRS[@]}"; do
   manifest="${dir}/pack.yaml"
   if [ ! -f "${manifest}" ]; then
@@ -90,6 +97,7 @@ for dir in "${PACK_DIRS[@]}"; do
   echo "Building pack: ${name}"
   "${PACK_BIN}" build \
     --log warn \
+    --allow-pack-schema \
     --in "${work_dir}" \
     --gtpack-out "${gtpack_out}" \
     --manifest "${manifest_out}" \

@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "flow": "setup_default.ygtc",
+  "nodes": {
+    "configure": {
+      "source": {
+        "kind": "local",
+        "path": "file://../../components/templating.handlebars/stub.wasm"
+      }
+    }
+  }
+}

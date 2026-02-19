@@ -3,88 +3,189 @@ version: 0.1.0
 kind: application
 publisher: greentic
 name: greentic.events.webhook
-description: Greentic webhook event providers
-authors:
-  - Greentic Engineering <engineering@greentic.dev>
-license: MIT
-meta:
-  entry_flows:
-    setup: setup
-    requirements: requirements
-  requires_public_base_url: true
-  capabilities: []
 components:
-  - id: events-webhook-source
-    version: 1.0.0
-    world: greentic:events/source@1.0.0
-    supports:
-      - event
-    profiles:
-      default: stateless
-      supported:
-        - stateless
-    capabilities:
-      wasi:
-        clocks: true
-      host:
-        secrets:
-          required:
-            - key: WEBHOOK_SIGNING_SECRET
-              required: false
-              description: Default signing secret for validating inbound webhook requests
-              scope:
-                env: "{{env}}"
-                tenant: "{{tenant}}"
-              format: text
-        events:
-          inbound: false
-          outbound: true
-        http:
-          server: true
-    wasm: components/stub.wasm
-  - id: templating.handlebars
-    version: 0.0.1
-    world: greentic:flow/templating@1.0.0
-    supports:
-      - messaging
-    profiles:
-      default: stateless
-      supported:
-        - stateless
-    capabilities:
-      wasi:
-        clocks: true
-        random: true
-        filesystem:
-          mode: none
-          mounts: []
-      host:
-        messaging:
-          inbound: false
-          outbound: false
-        secrets:
-          required: []
-        telemetry:
-          scope: node
-    wasm: components/templating.handlebars/stub.wasm
+- id: events-provider-dummy
+  version: 0.1.0
+  world: root:component/root
+  supports:
+  - messaging
+  profiles:
+    default: default
+    supported:
+    - default
+  capabilities:
+    wasi:
+      random: false
+      clocks: false
+    host: {}
+  wasm: components/events-provider-dummy.wasm
+- id: events-provider-email
+  version: 0.1.0
+  world: root:component/root
+  supports:
+  - messaging
+  profiles:
+    default: default
+    supported:
+    - default
+  capabilities:
+    wasi:
+      random: false
+      clocks: false
+    host: {}
+  wasm: components/events-provider-email.wasm
+- id: events-provider-sms
+  version: 0.1.0
+  world: root:component/root
+  supports:
+  - messaging
+  profiles:
+    default: default
+    supported:
+    - default
+  capabilities:
+    wasi:
+      random: false
+      clocks: false
+    host: {}
+  wasm: components/events-provider-sms.wasm
+- id: events-provider-timer
+  version: 0.1.0
+  world: root:component/root
+  supports:
+  - messaging
+  profiles:
+    default: default
+    supported:
+    - default
+  capabilities:
+    wasi:
+      random: false
+      clocks: false
+    host: {}
+  wasm: components/events-provider-timer.wasm
+- id: events-provider-webhook
+  version: 0.1.0
+  world: root:component/root
+  supports:
+  - messaging
+  profiles:
+    default: default
+    supported:
+    - default
+  capabilities:
+    wasi:
+      random: false
+      clocks: false
+    host: {}
+  wasm: components/events-provider-webhook.wasm
+- id: events-webhook-source
+  version: 1.0.0
+  world: greentic:events/source@1.0.0
+  supports:
+  - event
+  profiles:
+    default: stateless
+    supported:
+    - stateless
+  capabilities:
+    wasi:
+      random: false
+      clocks: true
+    host:
+      secrets:
+        required:
+        - key: WEBHOOK_SIGNING_SECRET
+          required: false
+          description: Default signing secret for validating inbound webhook requests
+          scope:
+            env: '{{env}}'
+            tenant: '{{tenant}}'
+          format: text
+      events:
+        inbound: false
+        outbound: true
+      http:
+        client: false
+        server: true
+  wasm: components/stubs/events-webhook-source.wasm
+- id: templating.handlebars
+  version: 0.1.0
+  world: greentic:flow/templating@1.0.0
+  supports:
+  - messaging
+  profiles:
+    default: stateless
+    supported:
+    - stateless
+  capabilities:
+    wasi:
+      filesystem:
+        mode: none
+        mounts: []
+      random: true
+      clocks: true
+    host:
+      secrets:
+        required: []
+      messaging:
+        inbound: false
+        outbound: false
+      telemetry:
+        scope: node
+  wasm: components/templating.handlebars/stub.wasm
+dependencies: []
 flows:
-  - id: webhook-in-default
-    file: flows/in_default.ygtc
-    entrypoints:
-      - webhook-in-default
-  - id: webhook-in-custom-template
-    file: flows/in_custom_template.ygtc
-    entrypoints: []
+- id: webhook-in-custom
+  file: flows/in_custom_template.ygtc
+  tags: []
+  entrypoints:
+  - default
+- id: webhook-in-default
+  file: flows/in_default.ygtc
+  tags: []
+  entrypoints:
+  - webhook-in-default
+- id: setup-default
+  file: flows/setup_default.ygtc
+  tags: []
+  entrypoints:
+  - setup-default
+- id: setup-custom
+  file: flows/setup_custom.ygtc
+  tags: []
+  entrypoints:
+  - setup-custom
+- id: update
+  file: flows/update.ygtc
+  tags: []
+  entrypoints:
+  - update
+- id: remove
+  file: flows/remove.ygtc
+  tags: []
+  entrypoints:
+  - remove
 events:
   providers:
-    - name: "webhook-gateway"
-      kind: "source"
-      component: "events-webhook-source@1.0.0"
-      default_flow: "flows/in_default.ygtc"
-      custom_flow: "flows/in_custom_template.ygtc"
-      capabilities:
-        transport: "webhook"
-        reliability: "at_least_once"
-        ordering: "none"
-        topics:
-          - "webhook.*"
+  - name: webhook-default
+    kind: source
+    component: events-webhook-source@1.0.0
+    default_flow: flows/in_default.ygtc
+    custom_flow: flows/in_custom_template.ygtc
+    capabilities:
+      transport: webhook
+      reliability: at_least_once
+      topics:
+      - webhook.in.*
+assets: []
+extensions:
+  greentic.events.ingress-http.v1:
+    kind: greentic.events.ingress-http.v1
+    version: 1.0.0
+    inline:
+      handlers:
+      - handler_id: webhook-default
+        method: POST
+        op_id: ingest_http
+        path: /v1/events/ingress/webhook/{tenant}/{team}/{handler}

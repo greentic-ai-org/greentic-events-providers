@@ -13,7 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       RUSTUP_TOOLCHAIN: 1.90.0
-      PACK_VERSION: "0.4"
     steps:
       - uses: actions/checkout@v4
       - name: Cache cargo bin
@@ -35,16 +34,23 @@ jobs:
         run: |
           rustup show active-toolchain
           rustup target list --toolchain "${RUSTUP_TOOLCHAIN}" --installed
-      - name: Install greentic-pack (skip if cached)
-        run: |
-          if ! command -v greentic-pack >/dev/null 2>&1 || [[ "$(greentic-pack --version)" != greentic-pack\ ${PACK_VERSION}* ]]; then
-            cargo binstall greentic-pack --force -y
-          fi
+      - name: Install latest greentic-pack
+        run: cargo binstall greentic-pack --force --locked -y
+      - name: Install latest greentic-flow
+        run: cargo binstall greentic-flow --force --locked -y
+      - name: Install latest greentic-component
+        run: cargo binstall greentic-component --force --locked -y
       - name: Install greentic-provision (skip if cached)
         run: |
           if ! command -v greentic-provision >/dev/null 2>&1; then
             cargo binstall greentic-provision --force -y
           fi
+      - name: Show Greentic tool versions
+        run: |
+          greentic-pack --version
+          greentic-flow --version
+          greentic-component --version
+          greentic-provision --version
       - name: Local check (fmt + clippy + test + packs)
         run: PACK_DEBUG=1 ci/local_check.sh
 

@@ -41,7 +41,7 @@ components:
           outbound: true
         http:
           server: true
-    wasm: components/stub.wasm
+    wasm: components/stubs/events-sms-source.wasm
   - id: events-sms-sink
     version: 1.0.0
     world: greentic:events/sink@1.0.0
@@ -69,9 +69,9 @@ components:
           outbound: false
         http:
           client: true
-    wasm: components/stub.wasm
+    wasm: components/stubs/events-sms-sink.wasm
   - id: templating.handlebars
-    version: 0.0.1
+    version: 0.1.0
     world: greentic:flow/templating@1.0.0
     supports:
       - messaging
@@ -122,3 +122,13 @@ events:
         reliability: "at_least_once"
         topics:
           - "sms.out.twilio"
+extensions:
+  greentic.events.ingress-http.v1:
+    kind: greentic.events.ingress-http.v1
+    version: 1.0.0
+    inline:
+      handlers:
+        - handler_id: sms-twilio-default
+          method: POST
+          path: /v1/events/ingress/sms.twilio/{tenant}/{team}/{handler}
+          op_id: ingest_http

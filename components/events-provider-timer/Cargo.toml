@@ -9,7 +9,8 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 anyhow.workspace = true
-greentic-interfaces-guest = { version = "0.4.69", default-features = false, features = [
+greentic-interfaces-guest = { workspace = true, features = [
+    "component-node",
     "provider-core-v1",
     "state-store",
     "types-core",
@@ -21,4 +22,4 @@ uuid.workspace = true
 
 [dev-dependencies]
 greentic-types.workspace = true
-tempfile = "3"
+tempfile.workspace = true

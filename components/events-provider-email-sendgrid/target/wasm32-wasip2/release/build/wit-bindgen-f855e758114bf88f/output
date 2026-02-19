@@ -1,0 +1,2 @@
+cargo:rustc-link-lib=static=wit_bindgen_cabi0_51_0
+cargo:rustc-link-search=native=/Users/maarten/Documents/GitHub/agentic/greentic-events-providers/components/events-provider-email-sendgrid/target/wasm32-wasip2/release/build/wit-bindgen-f855e758114bf88f/out

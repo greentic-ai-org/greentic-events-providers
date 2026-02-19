@@ -36,9 +36,9 @@ extensions:
       providers:
       - provider_type: events.webhook
         capabilities:
-        - publish
+        - ingest_http
         ops:
-        - publish
+        - ingest_http
         config_schema_ref: schemas/events/webhook/config.schema.json
         state_schema_ref: schemas/events/webhook/state.schema.json
         runtime:
@@ -46,3 +46,12 @@ extensions:
           export: schema-core
           world: greentic:provider/schema-core@1.0.0
         docs_ref: assets/schemas/events/webhook/README.md
+  greentic.events.ingress-http.v1:
+    kind: greentic.events.ingress-http.v1
+    version: 1.0.0
+    inline:
+      handlers:
+      - handler_id: webhook-default
+        method: POST
+        path: /v1/events/ingress/webhook/{tenant}/{team}/{handler}
+        op_id: ingest_http

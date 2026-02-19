@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "events.sms.twilio provider config",
+  "type": "object",
+  "required": ["messaging_provider_id"],
+  "properties": {
+    "messaging_provider_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable provider id used for routing and persistence keys."
+    },
+    "from": {
+      "type": "string",
+      "description": "Default sender number for outbound SMS."
+    },
+    "persistence_key_prefix": {
+      "type": "string",
+      "description": "Override prefix for persisted inbound requests."
+    }
+  },
+  "additionalProperties": false
+}

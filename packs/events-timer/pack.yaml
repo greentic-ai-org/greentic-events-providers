@@ -30,9 +30,9 @@ components:
         events:
           inbound: false
           outbound: true
-    wasm: components/stub.wasm
+    wasm: components/stubs/events-timer-source.wasm
   - id: templating.handlebars
-    version: 0.0.1
+    version: 0.1.0
     world: greentic:flow/templating@1.0.0
     supports:
       - messaging
@@ -61,6 +61,22 @@ flows:
     file: flows/default.ygtc
     entrypoints:
       - timer-default
+  - id: setup-default
+    file: flows/setup_default.ygtc
+    entrypoints:
+      - setup-default
+  - id: setup-custom
+    file: flows/setup_custom.ygtc
+    entrypoints:
+      - setup-custom
+  - id: update
+    file: flows/update.ygtc
+    entrypoints:
+      - update
+  - id: remove
+    file: flows/remove.ygtc
+    entrypoints:
+      - remove
 events:
   providers:
     - name: "timer-core"

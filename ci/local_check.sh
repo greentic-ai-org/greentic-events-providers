@@ -40,4 +40,7 @@ fi
 echo "==> greentic-provision conformance"
 bash scripts/provision_conformance.sh
 
+echo "==> no hand-rolling CI checks"
+bash ci/no_hand_rolling.sh
+
 echo "All checks passed."

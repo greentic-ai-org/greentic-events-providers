@@ -1,0 +1,13 @@
+{
+  "id": "greentic.events.sms.twilio",
+  "version": "0.1.0",
+  "meta": {
+    "entry_flows": {
+      "setup": "setup",
+      "requirements": "requirements"
+    },
+    "requires_public_base_url": true,
+    "capabilities": []
+  },
+  "flows": []
+}

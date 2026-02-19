@@ -1,0 +1,12 @@
+{
+  "msgraph": {
+    "client_id": "msgraph-client-id",
+    "tenant_id": "tenant-123"
+  },
+  "gmail": {
+    "client_id": "gmail-client-id"
+  },
+  "sender": {
+    "default_from": "noreply@example.com"
+  }
+}

@@ -1,0 +1,270 @@
+pack_id: greentic.events.email.sendgrid
+version: 0.1.0
+kind: application
+publisher: greentic
+name: greentic.events.email.sendgrid
+description: Greentic Email event providers (SendGrid Inbound Parse)
+meta:
+  entry_flows:
+    setup: setup
+    requirements: requirements
+    subscriptions: subscriptions
+  requires_public_base_url: true
+  capabilities: []
+components:
+- id: events-email-source
+  version: 1.0.0
+  world: greentic:events/source@1.0.0
+  supports:
+  - event
+  profiles:
+    default: stateless
+    supported:
+    - stateless
+  capabilities:
+    wasi:
+      clocks: true
+    host:
+      secrets:
+        required:
+        - key: MSGRAPH_CLIENT_SECRET
+          required: true
+          description: Client secret for the configured Microsoft Graph app registration
+          scope:
+            env: "{{env}}"
+            tenant: "{{tenant}}"
+          format: text
+        - key: GMAIL_CLIENT_SECRET
+          required: true
+          description: Client secret for the configured Google Workspace project
+          scope:
+            env: "{{env}}"
+            tenant: "{{tenant}}"
+          format: text
+        - key: GMAIL_REFRESH_TOKEN
+          required: true
+          description: Refresh token for the service account or delegated Gmail user
+          scope:
+            env: "{{env}}"
+            tenant: "{{tenant}}"
+          format: text
+      events:
+        inbound: false
+        outbound: true
+  wasm: components/stubs/events-email-source.wasm
+- id: events-email-sink
+  version: 1.0.0
+  world: greentic:events/sink@1.0.0
+  supports:
+  - event
+  profiles:
+    default: stateless
+    supported:
+    - stateless
+  capabilities:
+    wasi:
+      random: false
+      clocks: true
+    host:
+      secrets:
+        required:
+        - key: MSGRAPH_CLIENT_SECRET
+          required: true
+          description: Client secret for the configured Microsoft Graph app registration
+          scope:
+            env: '{{env}}'
+            tenant: '{{tenant}}'
+          format: text
+        - key: GMAIL_CLIENT_SECRET
+          required: true
+          description: Client secret for the configured Google Workspace project
+          scope:
+            env: '{{env}}'
+            tenant: '{{tenant}}'
+          format: text
+        - key: GMAIL_REFRESH_TOKEN
+          required: true
+          description: Refresh token for the service account or delegated Gmail user
+          scope:
+            env: '{{env}}'
+            tenant: '{{tenant}}'
+          format: text
+      events:
+        inbound: true
+        outbound: false
+      http:
+        client: true
+        server: false
+  wasm: components/stubs/events-email-sink.wasm
+- id: events-provider-dummy
+  version: 0.1.0
+  world: root:component/root
+  supports:
+  - messaging
+  profiles:
+    default: default
+    supported:
+    - default
+  capabilities:
+    wasi:
+      random: false
+      clocks: false
+    host: {}
+  wasm: components/events-provider-dummy.wasm
+- id: events-provider-email-sendgrid
+  version: 0.1.0
+  world: root:component/root
+  supports:
+  - messaging
+  profiles:
+    default: default
+    supported:
+    - default
+  capabilities:
+    wasi:
+      random: false
+      clocks: false
+    host: {}
+  wasm: components/events-provider-email-sendgrid.wasm
+- id: events-provider-sms-twilio
+  version: 0.1.0
+  world: root:component/root
+  supports:
+  - messaging
+  profiles:
+    default: default
+    supported:
+    - default
+  capabilities:
+    wasi:
+      random: false
+      clocks: false
+    host: {}
+  wasm: components/events-provider-sms-twilio.wasm
+- id: events-provider-timer
+  version: 0.1.0
+  world: root:component/root
+  supports:
+  - messaging
+  profiles:
+    default: default
+    supported:
+    - default
+  capabilities:
+    wasi:
+      random: false
+      clocks: false
+    host: {}
+  wasm: components/events-provider-timer.wasm
+- id: events-provider-webhook
+  version: 0.1.0
+  world: root:component/root
+  supports:
+  - messaging
+  profiles:
+    default: default
+    supported:
+    - default
+  capabilities:
+    wasi:
+      random: false
+      clocks: false
+    host: {}
+  wasm: components/events-provider-webhook.wasm
+- id: templating.handlebars
+  version: 0.1.0
+  world: greentic:flow/templating@1.0.0
+  supports:
+  - messaging
+  profiles:
+    default: stateless
+    supported:
+    - stateless
+  capabilities:
+    wasi:
+      filesystem:
+        mode: none
+        mounts: []
+      random: true
+      clocks: true
+    host:
+      secrets:
+        required: []
+      messaging:
+        inbound: false
+        outbound: false
+      telemetry:
+        scope: node
+  wasm: components/templating.handlebars/stub.wasm
+dependencies: []
+flows:
+- id: email-in-default
+  file: flows/in_default.ygtc
+  tags: []
+  entrypoints:
+  - email-in-default
+- id: email-out-default
+  file: flows/out_default.ygtc
+  tags: []
+  entrypoints:
+  - email-out-default
+- id: setup-default
+  file: flows/setup_default.ygtc
+  tags: []
+  entrypoints:
+  - setup-default
+- id: setup-custom
+  file: flows/setup_custom.ygtc
+  tags: []
+  entrypoints:
+  - setup-custom
+- id: update
+  file: flows/update.ygtc
+  tags: []
+  entrypoints:
+  - update
+- id: remove
+  file: flows/remove.ygtc
+  tags: []
+  entrypoints:
+  - remove
+schemas:
+- path: schemas/events/email/sendgrid/config.schema.json
+assets:
+- path: schemas/events/email/sendgrid/README.md
+events:
+  providers:
+    - name: "email-in-sendgrid"
+      kind: "source"
+      component: "events-email-source@1.0.0"
+      capabilities:
+        transport: "sendgrid"
+        reliability: "at_least_once"
+        topics:
+          - "email.in.sendgrid.*"
+extensions:
+  greentic.provider-extension.v1:
+    kind: greentic.provider-extension.v1
+    version: 1.0.0
+    inline:
+      providers:
+      - provider_type: events.email.sendgrid
+        capabilities:
+        - ingest_http
+        ops:
+        - ingest_http
+        config_schema_ref: schemas/events/email/sendgrid/config.schema.json
+        runtime:
+          component_ref: events-provider-email-sendgrid
+          export: schema-core
+          world: greentic:provider/schema-core@1.0.0
+        docs_ref: assets/schemas/events/email/sendgrid/README.md
+  greentic.events.ingress-http.v1:
+    kind: greentic.events.ingress-http.v1
+    version: 1.0.0
+    inline:
+      handlers:
+        - handler_id: email-sendgrid-default
+          method: POST
+          path: /v1/events/ingress/email.sendgrid/{tenant}/{team}/{handler}
+          op_id: ingest_http

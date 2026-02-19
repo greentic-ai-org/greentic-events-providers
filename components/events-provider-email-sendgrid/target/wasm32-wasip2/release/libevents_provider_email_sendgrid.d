@@ -1,0 +1,1 @@
+/Users/maarten/Documents/GitHub/agentic/greentic-events-providers/components/events-provider-email-sendgrid/target/wasm32-wasip2/release/libevents_provider_email_sendgrid.rlib: /Users/maarten/Documents/GitHub/agentic/greentic-events-providers/components/events-provider-email-sendgrid/src/lib.rs

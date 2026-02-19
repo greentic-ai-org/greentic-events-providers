@@ -1,0 +1,1 @@
+/Users/maarten/Documents/GitHub/agentic/greentic-events-providers/components/events-provider-timer/target/wasm32-wasip2/release/libevents_provider_timer.rlib: /Users/maarten/Documents/GitHub/agentic/greentic-events-providers/components/events-provider-timer/src/lib.rs

@@ -35,9 +35,9 @@ extensions:
       providers:
       - provider_type: events.timer
         capabilities:
-        - publish
+        - timer_tick
         ops:
-        - publish
+        - timer_tick
         config_schema_ref: schemas/events/timer/config.schema.json
         runtime:
           component_ref: events-provider-timer

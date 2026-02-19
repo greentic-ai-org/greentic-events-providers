@@ -1,0 +1,55 @@
+pack_id: greentic.events.provider.email.sendgrid
+version: 0.1.0
+kind: application
+publisher: greentic
+components:
+- id: events-provider-email-sendgrid
+  version: 0.1.0
+  world: greentic:provider/schema-core@1.0.0
+  supports: []
+  profiles:
+    default: stateless
+    supported:
+    - stateless
+  capabilities:
+    wasi:
+      random: false
+      clocks: true
+    host:
+      state:
+        read: false
+        write: false
+  wasm: components/events-provider-email-sendgrid.wasm
+  config_schema: schemas/events/email/sendgrid/config.schema.json
+dependencies: []
+flows: []
+schemas:
+- path: schemas/events/email/sendgrid/config.schema.json
+assets:
+- path: schemas/events/email/sendgrid/README.md
+extensions:
+  greentic.provider-extension.v1:
+    kind: greentic.provider-extension.v1
+    version: 1.0.0
+    inline:
+      providers:
+      - provider_type: events.email.sendgrid
+        capabilities:
+        - ingest_http
+        ops:
+        - ingest_http
+        config_schema_ref: schemas/events/email/sendgrid/config.schema.json
+        runtime:
+          component_ref: events-provider-email-sendgrid
+          export: schema-core
+          world: greentic:provider/schema-core@1.0.0
+        docs_ref: assets/schemas/events/email/sendgrid/README.md
+  greentic.events.ingress-http.v1:
+    kind: greentic.events.ingress-http.v1
+    version: 1.0.0
+    inline:
+      handlers:
+      - handler_id: email-sendgrid-default
+        method: POST
+        path: /v1/events/ingress/email.sendgrid/{tenant}/{team}/{handler}
+        op_id: ingest_http

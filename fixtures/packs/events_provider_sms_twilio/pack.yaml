@@ -1,0 +1,57 @@
+pack_id: greentic.events.provider.sms.twilio
+version: 0.1.0
+kind: application
+publisher: greentic
+components:
+- id: events-provider-sms-twilio
+  version: 0.1.0
+  world: greentic:provider/schema-core@1.0.0
+  supports: []
+  profiles:
+    default: stateless
+    supported:
+    - stateless
+  capabilities:
+    wasi:
+      random: false
+      clocks: true
+    host:
+      state:
+        read: false
+        write: false
+  wasm: components/events-provider-sms-twilio.wasm
+  config_schema: schemas/events/sms/config.schema.json
+dependencies: []
+flows: []
+schemas:
+- path: schemas/events/sms/config.schema.json
+assets:
+- path: schemas/events/sms/README.md
+extensions:
+  greentic.provider-extension.v1:
+    kind: greentic.provider-extension.v1
+    version: 1.0.0
+    inline:
+      providers:
+      - provider_type: events.sms.twilio
+        capabilities:
+        - ingest_http
+        - send_sms
+        ops:
+        - ingest_http
+        - send_sms
+        config_schema_ref: schemas/events/sms/config.schema.json
+        runtime:
+          component_ref: events-provider-sms-twilio
+          export: schema-core
+          world: greentic:provider/schema-core@1.0.0
+        docs_ref: assets/schemas/events/sms/README.md
+  greentic.events.ingress-http.v1:
+    kind: greentic.events.ingress-http.v1
+    version: 1.0.0
+    inline:
+      handlers:
+      - handler_id: sms-twilio-default
+        method: POST
+        path: /v1/events/ingress/sms.twilio/{tenant}/{team}/{handler}
+        op_id: ingest_http
